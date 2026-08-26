@@ -1,6 +1,6 @@
 {
   "name": "Lobo Solitaire",
-  "description": "A strategic Catppuccin-themed Solitaire card game where you battle against the Wolf to empty its hand and reach 100 points.",
+  "description": "Lobo The Wolf - Strategic solitaire card game with multiple game modes (5x Luck, Extra Cards, Classic), interactive main menu, audio settings with Lo-Fi beats, and multi-language support.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

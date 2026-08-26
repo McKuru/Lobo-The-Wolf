@@ -6,6 +6,8 @@ export interface Card {
   value: number; // 1 to 10
 }
 
+export type GameMode = 'classic' | 'lucky_5x' | 'extra_cards';
+
 export type MoveType = 'match' | 'sum' | 'split' | 'higher';
 
 export interface MoveValidation {
@@ -60,6 +62,7 @@ export interface GameState {
   wolfTotalScore: number;
   currentRound: number;
   targetScore: number; // 100 points
+  gameMode: GameMode;
   isRoundOver: boolean;
   roundResult: RoundResult | null;
   isGameOver: boolean;

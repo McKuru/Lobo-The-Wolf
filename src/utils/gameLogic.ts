@@ -1,4 +1,4 @@
-import { Card, MoveType, MoveValidation, Suit } from '../types';
+import { Card, GameMode, MoveType, MoveValidation, Suit } from '../types';
 import { Language, translations } from './i18n';
 
 export const SUITS: { suit: Suit; label: string; colorHex: string; bgClass: string; textClass: string; icon: string }[] = [
@@ -47,23 +47,83 @@ export function shuffleDeck(cards: Card[]): Card[] {
 }
 
 /**
- * Initial deal for a round:
- * 4 cards for Wolf, 4 cards for Player, rest for deck.
+ * Initial deal for a round based on GameMode:
+ * - classic: 4 cards for Wolf, 4 cards for Player
+ * - lucky_5x: 4 cards for Wolf, 4 highly favorable lucky cards for Player (5x luck)
+ * - extra_cards: 5 cards for Wolf, 6 cards for Player (Human starts with 6, Wolf starts with 5)
  */
-export function dealNewRound(): {
+export function dealNewRound(gameMode: GameMode = 'classic'): {
   wolfHand: Card[];
   playerHand: Card[];
   deck: Card[];
 } {
-  const deck = createNewDeck();
-  const wolfHand = deck.splice(0, 4);
-  const playerHand = deck.splice(0, 4);
+  let deck = createNewDeck();
+  const wolfCount = gameMode === 'extra_cards' ? 5 : 4;
+  const playerCount = gameMode === 'extra_cards' ? 6 : 4;
+
+  const wolfHand = deck.splice(0, wolfCount);
+
+  let playerHand: Card[] = [];
+
+  if (gameMode === 'lucky_5x') {
+    // 5x Luck Mode: Find cards in the deck that match wolf cards or have high values (7-10)
+    const wolfValues = wolfHand.map((c) => c.value);
+    
+    // Pick matches first
+    for (let i = 0; i < playerCount; i++) {
+      let targetIndex = -1;
+      if (i < 2 && wolfValues[i] !== undefined) {
+        // Find matching card value for wolf card
+        targetIndex = deck.findIndex((c) => c.value === wolfValues[i]);
+      }
+      if (targetIndex === -1) {
+        // Find high value card (>= 7)
+        targetIndex = deck.findIndex((c) => c.value >= 7);
+      }
+      if (targetIndex === -1) {
+        targetIndex = 0;
+      }
+      if (targetIndex !== -1 && deck.length > 0) {
+        playerHand.push(deck.splice(targetIndex, 1)[0]);
+      }
+    }
+  } else {
+    playerHand = deck.splice(0, playerCount);
+  }
 
   return {
     wolfHand,
     playerHand,
     deck,
   };
+}
+
+/**
+ * Draw cards from deck, with lucky advantage if in 5x Luck Mode and drawn for player
+ */
+export function drawCards(
+  deck: Card[],
+  count: number,
+  drawnBy: 'player' | 'wolf',
+  wolfHand: Card[],
+  gameMode: GameMode = 'classic'
+): { drawnCards: Card[]; remainingDeck: Card[] } {
+  const currentDeck = [...deck];
+  const drawnCards: Card[] = [];
+
+  for (let i = 0; i < count && currentDeck.length > 0; i++) {
+    if (drawnBy === 'player' && gameMode === 'lucky_5x' && Math.random() < 0.8) {
+      // 80% chance of pulling a card matching wolf values or a high card
+      const wolfValues = wolfHand.map((c) => c.value);
+      let targetIndex = currentDeck.findIndex((c) => wolfValues.includes(c.value) || c.value >= 8);
+      if (targetIndex === -1) targetIndex = 0;
+      drawnCards.push(currentDeck.splice(targetIndex, 1)[0]);
+    } else {
+      drawnCards.push(currentDeck.shift()!);
+    }
+  }
+
+  return { drawnCards, remainingDeck: currentDeck };
 }
 
 /**

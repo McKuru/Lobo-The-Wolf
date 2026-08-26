@@ -215,15 +215,15 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
                   : 'LOBO'}
               </span>
               <span
-                className={`text-[7px] sm:text-[9px] font-bold mt-0.5 uppercase text-center px-1 z-10
-                  ${isCharged ? 'text-[#11111b]' : 'text-[#6c7086] opacity-85'}
+                className={`text-[8px] sm:text-[10px] md:text-[11px] font-bold mt-1 uppercase text-center px-1 z-10 tracking-wide
+                  ${isCharged ? 'text-[#11111b]' : isPressing ? 'text-[#f38ba8]' : 'text-[#89b4fa] opacity-90'}
                 `}
               >
                 {isCharged
                   ? (lang === 'tr' ? 'Çekil' : 'Fold')
                   : isPressing
                   ? `%${Math.round(pressProgress * 100)}`
-                  : t.holdToSurrender}
+                  : 'Fold / Çekil'}
               </span>
             </button>
           </div>

@@ -20,7 +20,6 @@ class SoundEngine {
 
   constructor() {
     if (typeof window !== 'undefined') {
-      // Try to load bgm.mp3 if present
       try {
         this.bgmAudio = new Audio('/bgm.mp3');
         this.bgmAudio.loop = true;

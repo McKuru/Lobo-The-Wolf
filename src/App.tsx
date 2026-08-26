@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Card, GameState, MoveLogItem, RoundResult } from './types';
+import { Card, GameMode, GameState, MoveLogItem, RoundResult } from './types';
 import {
   dealNewRound,
   validateMove,
   findPossibleMoves,
   calculateCardsValue,
   shuffleDeck,
+  drawCards,
 } from './utils/gameLogic';
 import { soundManager } from './utils/audio';
 import { Language, translations } from './utils/i18n';
@@ -18,6 +19,9 @@ import { GameOverModal } from './components/GameOverModal';
 import { RulesModal } from './components/RulesModal';
 import { MoveLogDrawer } from './components/MoveLogDrawer';
 import { ResetConfirmModal } from './components/ResetConfirmModal';
+import { MainMenu } from './components/MainMenu';
+import { GameModeModal } from './components/GameModeModal';
+import { SettingsModal } from './components/SettingsModal';
 import { AnimatePresence, motion } from 'motion/react';
 import { Info, Shuffle } from 'lucide-react';
 
@@ -35,9 +39,20 @@ export default function App() {
     localStorage.setItem('lobo_lang', newLang);
   };
 
+  // Screen View State: Main Menu or In-Game
+  const [isInGame, setIsInGame] = useState(false);
+
+  // Selected Game Mode State (defaults to classic or saved)
+  const [gameMode, setGameMode] = useState<GameMode>(() => {
+    const saved = localStorage.getItem('lobo_gamemode');
+    return (saved === 'classic' || saved === 'lucky_5x' || saved === 'extra_cards')
+      ? (saved as GameMode)
+      : 'classic';
+  });
+
   // Game State
   const [gameState, setGameState] = useState<GameState>(() => {
-    const initialDeal = dealNewRound();
+    const initialDeal = dealNewRound(gameMode);
     return {
       playerHand: initialDeal.playerHand,
       wolfHand: initialDeal.wolfHand,
@@ -48,6 +63,7 @@ export default function App() {
       wolfTotalScore: 0,
       currentRound: 1,
       targetScore: 100,
+      gameMode: gameMode,
       isRoundOver: false,
       roundResult: null,
       isGameOver: false,
@@ -66,8 +82,10 @@ export default function App() {
     };
   });
 
-  // UI state
+  // UI Modals State
   const [isMuted, setIsMuted] = useState(false);
+  const [showGameModes, setShowGameModes] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -95,6 +113,29 @@ export default function App() {
       window.removeEventListener('touchstart', handleFirstInteraction);
     };
   }, []);
+
+  // Handle Game Mode Change
+  const handleSelectGameMode = (newMode: GameMode) => {
+    setGameMode(newMode);
+    localStorage.setItem('lobo_gamemode', newMode);
+
+    // Deal fresh round with new game mode rules
+    const freshDeal = dealNewRound(newMode);
+    setMoveCount(0);
+    setGameState((prev) => ({
+      ...prev,
+      gameMode: newMode,
+      playerHand: freshDeal.playerHand,
+      wolfHand: freshDeal.wolfHand,
+      deck: freshDeal.deck,
+      selectedPlayerCardIds: [],
+      selectedWolfCardIds: [],
+      isRoundOver: false,
+      roundResult: null,
+    }));
+    setHintedCardIds([]);
+    setHintMessage(null);
+  };
 
   // Derive selected card objects
   const selectedPlayerCards = useMemo(() => {
@@ -190,12 +231,16 @@ export default function App() {
         (c) => !prev.selectedWolfCardIds.includes(c.id)
       );
 
-      // 2. Draw cards from deck
-      let newDeck = [...prev.deck];
-      const drawnCards: Card[] = [];
-      for (let i = 0; i < drawnCount && newDeck.length > 0; i++) {
-        drawnCards.push(newDeck.shift()!);
-      }
+      // 2. Draw cards from deck using game mode logic
+      const drawResult = drawCards(
+        prev.deck,
+        drawnCount,
+        drawnBy,
+        remainingWolfHand,
+        prev.gameMode
+      );
+      let newDeck = drawResult.remainingDeck;
+      const drawnCards: Card[] = drawResult.drawnCards;
 
       // Check if this 3rd hand triggers a deck shuffle
       const nextMoveCount = moveCount + 1;
@@ -340,7 +385,7 @@ export default function App() {
 
   // Advance to Next Round
   const handleNextRound = () => {
-    const freshDeal = dealNewRound();
+    const freshDeal = dealNewRound(gameState.gameMode);
     setMoveCount(0);
     setGameState((prev) => ({
       ...prev,
@@ -359,7 +404,7 @@ export default function App() {
 
   // Restart Entire Game
   const handleRestartGame = () => {
-    const freshDeal = dealNewRound();
+    const freshDeal = dealNewRound(gameMode);
     setMoveCount(0);
     setGameState({
       playerHand: freshDeal.playerHand,
@@ -371,6 +416,7 @@ export default function App() {
       wolfTotalScore: 0,
       currentRound: 1,
       targetScore: 100,
+      gameMode: gameMode,
       isRoundOver: false,
       roundResult: null,
       isGameOver: false,
@@ -435,98 +481,142 @@ export default function App() {
 
   return (
     <div className="w-full h-screen flex flex-col bg-[#11111b] text-[#cdd6f4] font-sans select-none overflow-hidden relative">
-      {/* Header Bar */}
-      <HeaderBar
-        playerScore={gameState.playerTotalScore}
-        wolfScore={gameState.wolfTotalScore}
-        currentRound={gameState.currentRound}
-        targetScore={gameState.targetScore}
-        isMuted={isMuted}
-        lang={lang}
-        onLanguageChange={handleLanguageChange}
-        onToggleSound={handleToggleSound}
-        onShowRules={() => setShowRules(true)}
-        onShowHints={handleShowHints}
-        onToggleHistory={() => setShowHistory(true)}
-        onResetGame={() => setShowResetConfirm(true)}
-      />
-
-      {/* Shuffle Alert Notification Toast */}
-      <AnimatePresence>
-        {shuffleNotification && (
-          <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.9 }}
-            className="absolute top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-[#89b4fa] text-[#11111b] rounded-full font-bold text-xs shadow-2xl flex items-center gap-2 border border-white/20"
-          >
-            <Shuffle className="w-4 h-4 animate-spin" />
-            <span>{shuffleNotification}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Hint Alert Notification Bar */}
-      <AnimatePresence>
-        {hintMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="bg-[#181825] border-b border-[#f9e2af]/40 px-4 py-1.5 flex items-center justify-between text-xs text-[#f9e2af] z-30"
-          >
-            <div className="flex items-center gap-2">
-              <Info className="w-4 h-4 flex-shrink-0" />
-              <span>{hintMessage}</span>
-            </div>
-            <button
-              onClick={() => setHintMessage(null)}
-              className="text-[#a6adc8] hover:text-[#cdd6f4] text-xs px-2 py-0.5 rounded cursor-pointer"
-            >
-              {t.closeBtn}
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Main Game Stage: Split Horizontally */}
-      <main className="flex-1 flex flex-col justify-between relative overflow-hidden bg-[#1e1e2e]">
-        {/* Top Half: Wolf Zone */}
-        <WolfZone
-          wolfCards={gameState.wolfHand}
-          selectedCardIds={gameState.selectedWolfCardIds}
-          hintedCardIds={hintedCardIds}
-          onToggleCard={handleToggleWolfCard}
-          disabled={gameState.isRoundOver}
+      {/* If not in-game, render the Main Menu screen */}
+      {!isInGame ? (
+        <MainMenu
+          onStartGame={() => {
+            soundManager.startMusic();
+            setIsInGame(true);
+          }}
+          onOpenGameModes={() => setShowGameModes(true)}
+          onOpenSettings={() => setShowSettings(true)}
+          onOpenRules={() => setShowRules(true)}
+          currentMode={gameMode}
+          stats={gameState.stats}
+          isMuted={isMuted}
+          onToggleSound={handleToggleSound}
           lang={lang}
+          onLanguageChange={handleLanguageChange}
         />
+      ) : (
+        <>
+          {/* Header Bar */}
+          <HeaderBar
+            playerScore={gameState.playerTotalScore}
+            wolfScore={gameState.wolfTotalScore}
+            currentRound={gameState.currentRound}
+            targetScore={gameState.targetScore}
+            currentMode={gameState.gameMode}
+            isMuted={isMuted}
+            lang={lang}
+            onOpenMenu={() => setIsInGame(false)}
+            onOpenGameModes={() => setShowGameModes(true)}
+            onOpenSettings={() => setShowSettings(true)}
+            onShowRules={() => setShowRules(true)}
+            onShowHints={handleShowHints}
+            onToggleHistory={() => setShowHistory(true)}
+            onResetGame={() => setShowResetConfirm(true)}
+          />
 
-        {/* Center Dynamic Action Button & Central Dashed Divider */}
-        <div className="h-1 flex items-center justify-center relative z-20 w-full">
-          <div className="w-full border-t-2 border-dashed border-[#313244] pointer-events-none" />
-          <div className="absolute">
-            <CenterActionButton
-              hasSelection={hasSelection}
-              validation={validation}
-              onPlayMove={handlePlayMove}
-              onSurrender={handleSurrender}
+          {/* Shuffle Alert Notification Toast */}
+          <AnimatePresence>
+            {shuffleNotification && (
+              <motion.div
+                initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                className="absolute top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-[#89b4fa] text-[#11111b] rounded-full font-bold text-xs shadow-2xl flex items-center gap-2 border border-white/20"
+              >
+                <Shuffle className="w-4 h-4 animate-spin" />
+                <span>{shuffleNotification}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Hint Alert Notification Bar */}
+          <AnimatePresence>
+            {hintMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-[#181825] border-b border-[#f9e2af]/40 px-4 py-1.5 flex items-center justify-between text-xs text-[#f9e2af] z-30"
+              >
+                <div className="flex items-center gap-2">
+                  <Info className="w-4 h-4 flex-shrink-0" />
+                  <span>{hintMessage}</span>
+                </div>
+                <button
+                  onClick={() => setHintMessage(null)}
+                  className="text-[#a6adc8] hover:text-[#cdd6f4] text-xs px-2 py-0.5 rounded cursor-pointer"
+                >
+                  {t.closeBtn}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Main Game Stage: Split Horizontally */}
+          <main className="flex-1 flex flex-col justify-between relative overflow-hidden bg-[#1e1e2e]">
+            {/* Top Half: Wolf Zone */}
+            <WolfZone
+              wolfCards={gameState.wolfHand}
+              selectedCardIds={gameState.selectedWolfCardIds}
+              hintedCardIds={hintedCardIds}
+              onToggleCard={handleToggleWolfCard}
               disabled={gameState.isRoundOver}
               lang={lang}
             />
-          </div>
-        </div>
 
-        {/* Bottom Half: Player Zone */}
-        <PlayerZone
-          playerCards={gameState.playerHand}
-          deck={gameState.deck}
-          selectedCardIds={gameState.selectedPlayerCardIds}
-          hintedCardIds={hintedCardIds}
-          onToggleCard={handleTogglePlayerCard}
-          disabled={gameState.isRoundOver}
-          lang={lang}
-        />
-      </main>
+            {/* Center Dynamic Action Button & Central Dashed Divider */}
+            <div className="h-1 flex items-center justify-center relative z-20 w-full">
+              <div className="w-full border-t-2 border-dashed border-[#313244] pointer-events-none" />
+              <div className="absolute">
+                <CenterActionButton
+                  hasSelection={hasSelection}
+                  validation={validation}
+                  onPlayMove={handlePlayMove}
+                  onSurrender={handleSurrender}
+                  disabled={gameState.isRoundOver}
+                  lang={lang}
+                />
+              </div>
+            </div>
+
+            {/* Bottom Half: Player Zone */}
+            <PlayerZone
+              playerCards={gameState.playerHand}
+              deck={gameState.deck}
+              selectedCardIds={gameState.selectedPlayerCardIds}
+              hintedCardIds={hintedCardIds}
+              onToggleCard={handleTogglePlayerCard}
+              disabled={gameState.isRoundOver}
+              lang={lang}
+            />
+          </main>
+        </>
+      )}
+
+      {/* Game Mode Selection Modal */}
+      <GameModeModal
+        isOpen={showGameModes}
+        currentMode={gameMode}
+        onSelectMode={handleSelectGameMode}
+        onClose={() => setShowGameModes(false)}
+        lang={lang}
+      />
+
+      {/* Settings / Sound Modal */}
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        lang={lang}
+        onLanguageChange={handleLanguageChange}
+        onResetGame={() => {
+          setShowSettings(false);
+          setShowResetConfirm(true);
+        }}
+      />
 
       {/* Reset Confirmation Modal */}
       <ResetConfirmModal

@@ -1,19 +1,51 @@
 export type Language = 'tr' | 'en';
 
 export interface Translations {
-  // Header
+  // Header & Menu
   appTitle: string;
   targetScore: string;
   round: string;
   hint: string;
   history: string;
   rules: string;
+  settings: string;
+  gameModes: string;
+  mainMenu: string;
   sound: string;
   mute: string;
+  unmute: string;
   reset: string;
   language: string;
   wolfLabel: string;
   youLabel: string;
+  backToGame: string;
+  returnToMenu: string;
+
+  // Main Menu Specific
+  menuSubtitle: string;
+  playBtn: string;
+  gameModeBtn: string;
+  settingsBtn: string;
+  rulesBtn: string;
+  historyBtn: string;
+
+  // Game Modes
+  modeClassicTitle: string;
+  modeClassicDesc: string;
+  modeLuckyTitle: string;
+  modeLuckyDesc: string;
+  modeExtraTitle: string;
+  modeExtraDesc: string;
+  selectGameMode: string;
+  currentModeBadge: string;
+
+  // Audio / Settings Modal
+  settingsTitle: string;
+  soundSettings: string;
+  bgmVolumeLabel: string;
+  sfxVolumeLabel: string;
+  muteToggleLabel: string;
+  languageSelectLabel: string;
 
   // Zones
   wolfHandTitle: string;
@@ -26,6 +58,7 @@ export interface Translations {
   play: string;
   invalid: string;
   fold: string;
+  foldSubtext: string;
   holdToFold: string;
   releaseToCancel: string;
 
@@ -104,9 +137,10 @@ export interface Translations {
   deckExhaustedTitle: string;
   deckExhaustedDesc: string;
 
-  // Hints
+  // Hints & Toasts
   noValidMoveHint: string;
   hintPrefix: string;
+  deckShuffledToast: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -117,12 +151,41 @@ export const translations: Record<Language, Translations> = {
     hint: 'İpucu',
     history: 'Geçmiş',
     rules: 'Kurallar',
+    settings: 'Ayarlar',
+    gameModes: 'Oyun Modu',
+    mainMenu: 'Ana Menü',
     sound: 'Ses',
     mute: 'Sesi Kapat',
+    unmute: 'Sesi Aç',
     reset: 'Sıfırla',
     language: 'Dil',
     wolfLabel: 'KURT',
     youLabel: 'SEN',
+    backToGame: 'Oyuna Dön',
+    returnToMenu: 'Menüye Dön',
+
+    menuSubtitle: 'Strateji, Şans ve Kurt ile Mücadele',
+    playBtn: 'Oyna',
+    gameModeBtn: 'Oyun Modu',
+    settingsBtn: 'Ayarlar',
+    rulesBtn: 'Kurallar',
+    historyBtn: 'Geçmiş',
+
+    modeClassicTitle: 'Klasik Mod',
+    modeClassicDesc: 'Standart Lobo kuralları. Oyuncu ve Kurt 4\'er kartla başlar.',
+    modeLuckyTitle: '5x Şans Modu',
+    modeLuckyDesc: 'Yeni başlayanlar için! Oyuncuya daha yüksek ve eşleşen şanslı kartlar gelir.',
+    modeExtraTitle: 'Ekstra Kart Modu',
+    modeExtraDesc: 'İnsan 6 kartla, Kurt ise 5 kartla oyuna başlar.',
+    selectGameMode: 'Oyun Modunu Seç',
+    currentModeBadge: 'Aktif Mod',
+
+    settingsTitle: 'Ses ve Oyun Ayarları',
+    soundSettings: 'Ses Düzeyleri',
+    bgmVolumeLabel: 'Müzik Sesi (Lo-Fi Beat)',
+    sfxVolumeLabel: 'Ses Efektleri',
+    muteToggleLabel: 'Tüm Sesleri Kapat',
+    languageSelectLabel: 'Arayüz Dili',
 
     wolfHandTitle: 'KURT ELİ',
     playerHandTitle: 'SENİN ELİN',
@@ -133,8 +196,9 @@ export const translations: Record<Language, Translations> = {
     play: 'OYNA',
     invalid: 'GEÇERSİZ',
     fold: 'ÇEKİL',
-    holdToFold: 'Çekilmek için basılı tutun',
-    releaseToCancel: 'İptal etmek için bırakın',
+    foldSubtext: 'Fold / Çekil',
+    holdToFold: 'Fold / Çekil',
+    releaseToCancel: 'İptal için bırak',
 
     matchMoveTitle: 'Eşleme',
     higherMoveTitle: 'Üst',
@@ -158,7 +222,7 @@ export const translations: Record<Language, Translations> = {
 
     rulesTitle: 'Lobo Oyun Kuralları',
     rulesGoalHeader: 'Oyunun Amacı',
-    rulesGoalText: 'Lobo oyununda Oyuncu ve Kurt 4\'er açık kartla başlar. Amacınız elinizdeki kartları kullanarak Kurt\'un elindeki tüm kartları yok etmektir. 100 puana ilk ulaşan oyunu kazanır!',
+    rulesGoalText: 'Lobo oyununda Oyuncu ve Kurt açık kartlarla başlar. Amacınız elinizdeki kartları kullanarak Kurt\'un elindeki tüm kartları yok etmektir. 100 puana ilk ulaşan oyunu kazanır!',
     rulesMovesHeader: 'Olası Hamleler (Kurt sıra beklemez, tüm hamleleri siz yaparsınız)',
     rulesPerfectTitle: 'Eşleme (Perfect Match)',
     rulesPerfectDesc: 'Elinizden 1 kart oynayarak Kurt\'un elindeki aynı değere sahip 1 kartı alırsınız. Ardından desteden 1 yeni kart çekersiniz.',
@@ -174,7 +238,7 @@ export const translations: Record<Language, Translations> = {
     rulesScoringClear: 'Kurt\'un elini sıfırlarsanız: Elinizde kalan kartların değerleri toplamını puan olarak kazanırsınız.',
     rulesScoringFold: 'Turdan çekilirseniz: Kurt, kendi elinde kalan kartların puan toplamını kazanır.',
     rulesScoringWin: '100 puana ilk ulaşan maçı kazanır.',
-    closeBtn: 'Anladım',
+    closeBtn: 'Kapat',
 
     roundWonTitle: 'Kurt\'u Yendiniz!',
     roundLostTitle: 'Tur Kaybedildi!',
@@ -205,6 +269,7 @@ export const translations: Record<Language, Translations> = {
 
     noValidMoveHint: 'Mevcut seçimle geçerli bir hamle bulunamadı.',
     hintPrefix: 'İpucu',
+    deckShuffledToast: 'Deste karıştırıldı!',
   },
   en: {
     appTitle: 'Lobo The Wolf',
@@ -213,12 +278,41 @@ export const translations: Record<Language, Translations> = {
     hint: 'Hint',
     history: 'History',
     rules: 'Rules',
+    settings: 'Settings',
+    gameModes: 'Game Mode',
+    mainMenu: 'Main Menu',
     sound: 'Sound',
     mute: 'Mute',
+    unmute: 'Unmute',
     reset: 'Reset',
     language: 'Language',
     wolfLabel: 'WOLF',
     youLabel: 'YOU',
+    backToGame: 'Back to Game',
+    returnToMenu: 'Back to Menu',
+
+    menuSubtitle: 'Strategy, Luck & Battle Against The Wolf',
+    playBtn: 'Play',
+    gameModeBtn: 'Game Mode',
+    settingsBtn: 'Settings',
+    rulesBtn: 'Rules',
+    historyBtn: 'History',
+
+    modeClassicTitle: 'Classic Mode',
+    modeClassicDesc: 'Standard Lobo rules. Player and Wolf start with 4 cards each.',
+    modeLuckyTitle: '5x Luck Mode',
+    modeLuckyDesc: 'Ideal for beginners! Player receives lucky high cards and easy matches.',
+    modeExtraTitle: 'Extra Cards Mode',
+    modeExtraDesc: 'Human starts with 6 cards, while Wolf starts with 5 cards.',
+    selectGameMode: 'Select Game Mode',
+    currentModeBadge: 'Active Mode',
+
+    settingsTitle: 'Audio & Preferences',
+    soundSettings: 'Audio Levels',
+    bgmVolumeLabel: 'Music Volume (Lo-Fi Beat)',
+    sfxVolumeLabel: 'Sound Effects Volume',
+    muteToggleLabel: 'Mute All Sounds',
+    languageSelectLabel: 'Display Language',
 
     wolfHandTitle: 'WOLF HAND',
     playerHandTitle: 'YOUR HAND',
@@ -229,7 +323,8 @@ export const translations: Record<Language, Translations> = {
     play: 'PLAY',
     invalid: 'INVALID',
     fold: 'FOLD',
-    holdToFold: 'Hold button to fold round',
+    foldSubtext: 'Fold / Çekil',
+    holdToFold: 'Fold / Çekil',
     releaseToCancel: 'Release to cancel',
 
     matchMoveTitle: 'Perfect',
@@ -254,7 +349,7 @@ export const translations: Record<Language, Translations> = {
 
     rulesTitle: 'Lobo Game Rules',
     rulesGoalHeader: 'Objective',
-    rulesGoalText: 'In Lobo, both Player and Wolf start with a face-up hand of 4 cards. Your goal is to eliminate all cards from the Wolf\'s hand using your own cards. First to reach 100 points wins the game!',
+    rulesGoalText: 'In Lobo, both Player and Wolf start with face-up hands. Your goal is to eliminate all cards from the Wolf\'s hand using your own cards. First to reach 100 points wins the game!',
     rulesMovesHeader: 'Available Actions (Wolf does not take turns, you make all actions)',
     rulesPerfectTitle: 'Perfect Match',
     rulesPerfectDesc: 'Play 1 card from your hand to capture 1 card of the same rank from the Wolf\'s hand, then draw 1 card.',
@@ -270,7 +365,7 @@ export const translations: Record<Language, Translations> = {
     rulesScoringClear: 'If Wolf\'s hand is emptied: You score the sum of points remaining in your hand.',
     rulesScoringFold: 'If you Fold: Wolf scores the points remaining in their hand.',
     rulesScoringWin: 'First to reach 100 points wins the match.',
-    closeBtn: 'Got it',
+    closeBtn: 'Close',
 
     roundWonTitle: 'You Defeated the Wolf!',
     roundLostTitle: 'Round Folded / Lost',
@@ -301,5 +396,6 @@ export const translations: Record<Language, Translations> = {
 
     noValidMoveHint: 'No valid move found with the current selection.',
     hintPrefix: 'Hint',
+    deckShuffledToast: 'Deck shuffled!',
   },
 };
