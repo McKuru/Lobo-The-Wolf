@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MoveValidation } from '../types';
 import { soundManager } from '../utils/audio';
-import { Play, Flag, AlertCircle, CheckCircle2, Sparkles } from 'lucide-react';
+import { Language, translations } from '../utils/i18n';
 
 interface CenterActionButtonProps {
   hasSelection: boolean;
@@ -10,6 +10,7 @@ interface CenterActionButtonProps {
   onPlayMove: () => void;
   onSurrender: () => void;
   disabled?: boolean;
+  lang?: Language;
 }
 
 export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
@@ -18,6 +19,7 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
   onPlayMove,
   onSurrender,
   disabled = false,
+  lang = 'tr',
 }) => {
   const [pressProgress, setPressProgress] = useState(0);
   const [isPressing, setIsPressing] = useState(false);
@@ -27,6 +29,8 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
   const startTimeRef = useRef<number | null>(null);
   const isChargedRef = useRef(false);
   const HOLD_DURATION = 650; // Snappy 0.65s hold duration
+
+  const t = translations[lang];
 
   // Clear timers on unmount
   useEffect(() => {
@@ -147,19 +151,19 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
               {validation.isValid ? (
                 <>
                   <span className="text-[#11111b] font-black text-sm sm:text-xl md:text-2xl tracking-tighter uppercase leading-none">
-                    OYNA
+                    {t.playMove}
                   </span>
                   <span className="text-[#11111b] text-[8px] sm:text-[10px] md:text-[11px] font-bold opacity-85 mt-0.5 uppercase text-center px-1 whitespace-nowrap">
-                    {validation.title || 'Hamle'}
+                    {validation.title || (lang === 'tr' ? 'Hamle' : 'Move')}
                   </span>
                 </>
               ) : (
                 <>
                   <span className="text-[#f38ba8] font-black text-xs sm:text-sm md:text-base tracking-tight uppercase leading-none">
-                    GEÇERSİZ
+                    {t.invalidMove}
                   </span>
                   <span className="text-[#a6adc8] text-[7px] sm:text-[9px] font-semibold mt-0.5 text-center px-1 whitespace-nowrap">
-                    {validation.errorReason || 'Hata'}
+                    {validation.errorReason || (lang === 'tr' ? 'Hata' : 'Error')}
                   </span>
                 </>
               )}
@@ -204,7 +208,11 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
                   }
                 `}
               >
-                {isCharged ? 'BIRAKIN' : isPressing ? 'ÇEKİL' : 'LOBO'}
+                {isCharged
+                  ? (lang === 'tr' ? 'BIRAKIN' : 'RELEASE')
+                  : isPressing
+                  ? (lang === 'tr' ? 'ÇEKİL' : 'FOLD')
+                  : 'LOBO'}
               </span>
               <span
                 className={`text-[7px] sm:text-[9px] font-bold mt-0.5 uppercase text-center px-1 z-10
@@ -212,10 +220,10 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
                 `}
               >
                 {isCharged
-                  ? 'Çekil'
+                  ? (lang === 'tr' ? 'Çekil' : 'Fold')
                   : isPressing
                   ? `%${Math.round(pressProgress * 100)}`
-                  : 'Basılı Tut'}
+                  : t.holdToSurrender}
               </span>
             </button>
           </div>

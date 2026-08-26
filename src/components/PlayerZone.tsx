@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card } from '../types';
 import { CardView } from './CardView';
+import { Language, translations } from '../utils/i18n';
 
 interface PlayerZoneProps {
   playerCards: Card[];
@@ -10,6 +11,7 @@ interface PlayerZoneProps {
   hintedCardIds: string[];
   onToggleCard: (cardId: string) => void;
   disabled?: boolean;
+  lang?: Language;
 }
 
 export const PlayerZone: React.FC<PlayerZoneProps> = ({
@@ -19,9 +21,10 @@ export const PlayerZone: React.FC<PlayerZoneProps> = ({
   hintedCardIds,
   onToggleCard,
   disabled = false,
+  lang = 'tr',
 }) => {
   const topDeckCard = deck.length > 0 ? deck[0] : undefined;
-  const totalValue = playerCards.reduce((acc, c) => acc + c.value, 0);
+  const t = translations[lang];
 
   return (
     <section
@@ -33,10 +36,10 @@ export const PlayerZone: React.FC<PlayerZoneProps> = ({
         <div className="flex items-center gap-2.5">
           <div className="w-2.5 h-2.5 rounded-full bg-[#89b4fa]" />
           <span className="text-xs uppercase tracking-widest text-[#89b4fa] font-bold">
-            Senin Elin
+            {t.playerHandTitle}
           </span>
           <span className="text-[11px] text-[#6c7086] font-mono hidden sm:inline ml-2">
-            (Toplam: <strong className="text-[#a6e3a1]">{totalValue} Puan</strong>)
+            ({playerCards.length} {t.cardCount})
           </span>
         </div>
 
@@ -44,11 +47,15 @@ export const PlayerZone: React.FC<PlayerZoneProps> = ({
         <div className="flex items-center gap-2">
           {selectedCardIds.length > 0 ? (
             <span className="px-3 py-1 rounded-lg bg-[#89b4fa]/15 text-[#89b4fa] border border-[#89b4fa]/30 text-xs font-semibold animate-pulse">
-              {selectedCardIds.length} kart seçildi
+              {lang === 'tr'
+                ? `${selectedCardIds.length} kart seçildi`
+                : `${selectedCardIds.length} cards selected`}
             </span>
           ) : (
             <span className="text-xs text-[#6c7086] hidden sm:inline">
-              Hamle yapmak için kartlara tıklayın
+              {lang === 'tr'
+                ? 'Hamle yapmak için kartlara tıklayın'
+                : 'Click on cards to make a move'}
             </span>
           )}
         </div>
@@ -65,7 +72,9 @@ export const PlayerZone: React.FC<PlayerZoneProps> = ({
                 animate={{ scale: 1, opacity: 1 }}
                 className="col-span-2 px-6 py-4 rounded-xl border border-dashed border-[#585b70]/40 bg-[#181825] text-center"
               >
-                <p className="text-sm font-semibold text-[#a6adc8]">Elinizde kart kalmadı</p>
+                <p className="text-sm font-semibold text-[#a6adc8]">
+                  {lang === 'tr' ? 'Elinizde kart kalmadı' : 'No cards left in hand'}
+                </p>
               </motion.div>
             ) : (
               playerCards.map((card) => (
@@ -95,7 +104,7 @@ export const PlayerZone: React.FC<PlayerZoneProps> = ({
                 {/* Top Card Face Up with Açık Kart Badge & Elevation */}
                 <div className="relative z-10 shadow-[0_12px_32px_rgba(0,0,0,0.65)] rounded-xl">
                   <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-[#a6e3a1] text-[#11111b] text-[8px] sm:text-[10px] font-black px-1.5 py-0.5 rounded uppercase z-20 shadow-md whitespace-nowrap">
-                    Açık Kart
+                    {lang === 'tr' ? 'Açık Kart' : 'Face Up'}
                   </div>
                   <CardView
                     card={topDeckCard}
@@ -107,14 +116,20 @@ export const PlayerZone: React.FC<PlayerZoneProps> = ({
                 {/* Deck remaining count badge */}
                 <div className="mt-1 sm:mt-2 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#181825] border border-[#45475a] text-[9px] sm:text-[10px] text-[#cdd6f4] font-medium shadow-md">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#a6e3a1]" />
-                  <span>Deste: {deck.length} kart</span>
+                  <span>
+                    {lang === 'tr'
+                      ? `Deste: ${deck.length} kart`
+                      : `Deck: ${deck.length} cards`}
+                  </span>
                 </div>
               </>
             ) : (
               <div className="w-16 h-22 sm:w-20 sm:h-28 md:w-24 md:h-34 lg:w-28 lg:h-40 rounded-xl border-2 border-dashed border-[#45475a] bg-[#181825]/40 flex flex-col items-center justify-center p-2 text-center">
                 <span className="text-lg sm:text-xl mb-1 opacity-50">📭</span>
-                <span className="text-[9px] sm:text-[10px] font-bold text-[#a6adc8]">Deste Bitti</span>
-                <span className="text-[8px] sm:text-[9px] text-[#6c7086]">0 kart</span>
+                <span className="text-[9px] sm:text-[10px] font-bold text-[#a6adc8]">
+                  {t.deckExhaustedTitle}
+                </span>
+                <span className="text-[8px] sm:text-[9px] text-[#6c7086]">0 {t.cardCount}</span>
               </div>
             )}
           </div>
@@ -124,7 +139,7 @@ export const PlayerZone: React.FC<PlayerZoneProps> = ({
       {/* Player footer guide */}
       <div className="flex items-center justify-end text-[11px] text-[#6c7086] pt-1">
         <span className="text-[#a6adc8]">
-          Hedef Skor: <span className="text-[#f9e2af] font-bold">100 Puan</span>
+          {t.targetScore}: <span className="text-[#f9e2af] font-bold">100 Puan</span>
         </span>
       </div>
     </section>

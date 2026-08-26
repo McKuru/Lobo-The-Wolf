@@ -1,19 +1,24 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { RotateCcw, AlertTriangle, X } from 'lucide-react';
+import { Language, translations } from '../utils/i18n';
 
 interface ResetConfirmModalProps {
   isOpen: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  lang?: Language;
 }
 
 export const ResetConfirmModal: React.FC<ResetConfirmModalProps> = ({
   isOpen,
   onConfirm,
   onCancel,
+  lang = 'tr',
 }) => {
   if (!isOpen) return null;
+
+  const t = translations[lang];
 
   return (
     <div
@@ -36,7 +41,7 @@ export const ResetConfirmModal: React.FC<ResetConfirmModalProps> = ({
               <AlertTriangle className="w-4 h-4" />
             </div>
             <h3 className="text-base sm:text-lg font-bold text-[#cdd6f4]">
-              Oyunu Yeniden Başlat?
+              {t.resetConfirmTitle}
             </h3>
           </div>
           <button
@@ -50,11 +55,11 @@ export const ResetConfirmModal: React.FC<ResetConfirmModalProps> = ({
         {/* Body Message */}
         <div className="px-6 py-5 space-y-3">
           <p className="text-sm text-[#a6adc8] leading-relaxed">
-            Mevcut turunuz, puan tablonuz ve eldeki tüm hamle geçmişiniz sıfırlanacak.
+            {t.resetConfirmDesc}
           </p>
           <div className="p-3 rounded-xl bg-[#1e1e2e] border border-[#313244] text-xs text-[#f9e2af] flex items-start gap-2">
             <RotateCcw className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <span>Yeni bir deste dağıtılarak 1. Turdan baştan başlanacaktır.</span>
+            <span>{t.resetConfirmNote}</span>
           </div>
         </div>
 
@@ -65,7 +70,7 @@ export const ResetConfirmModal: React.FC<ResetConfirmModalProps> = ({
             onClick={onCancel}
             className="px-4 py-2 rounded-xl bg-[#313244] hover:bg-[#45475a] text-[#cdd6f4] text-xs sm:text-sm font-semibold transition-all cursor-pointer"
           >
-            Vazgeç
+            {t.cancelBtn}
           </button>
           <button
             id="reset-confirm-button"
@@ -73,7 +78,7 @@ export const ResetConfirmModal: React.FC<ResetConfirmModalProps> = ({
             className="px-4 py-2 rounded-xl bg-[#f38ba8] hover:bg-[#f38ba8]/90 text-[#11111b] text-xs sm:text-sm font-bold shadow-lg transition-all hover:scale-102 active:scale-98 cursor-pointer flex items-center gap-1.5"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Evet, Sıfırla</span>
+            <span>{t.confirmResetBtn}</span>
           </button>
         </div>
       </motion.div>

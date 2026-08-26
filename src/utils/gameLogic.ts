@@ -1,4 +1,5 @@
 import { Card, MoveType, MoveValidation, Suit } from '../types';
+import { Language, translations } from './i18n';
 
 export const SUITS: { suit: Suit; label: string; colorHex: string; bgClass: string; textClass: string; icon: string }[] = [
   { suit: 'rose', label: 'Gül', colorHex: '#f38ba8', bgClass: 'bg-[#f38ba8]/15 border-[#f38ba8]/40 text-[#f38ba8]', textClass: 'text-[#f38ba8]', icon: '🌸' },
@@ -67,37 +68,44 @@ export function dealNewRound(): {
 
 /**
  * Validates selected player and wolf cards against the 4 Lobo move rules:
- * 1. Eşleştirme (Match): 1 Player card === 1 Wolf card. (Player draws 1)
+ * 1. Eşleştirme (Match / Perfect): 1 Player card === 1 Wolf card. (Player draws 1)
  * 2. Toplama (Sum): 2+ Player cards sum === 1 Wolf card. (Player draws 1)
  * 3. Bölme (Split): 1 Player card === 2+ Wolf cards sum. (Wolf draws 1)
- * 4. Üst (Higher): 1 Player card > 1 Wolf card. (Wolf draws Player - Wolf diff)
+ * 4. Üst (Higher / Over): 1 Player card > 1 Wolf card. (Wolf draws Player - Wolf diff)
  */
-export function validateMove(playerCards: Card[], wolfCards: Card[], deckLength: number): MoveValidation {
+export function validateMove(
+  playerCards: Card[],
+  wolfCards: Card[],
+  deckLength: number,
+  lang: Language = 'tr'
+): MoveValidation {
+  const t = translations[lang];
+
   if (playerCards.length === 0 && wolfCards.length === 0) {
     return {
       isValid: false,
-      errorReason: 'Kart seçin',
+      errorReason: t.errSelectCards,
     };
   }
 
   if (playerCards.length === 0) {
     return {
       isValid: false,
-      errorReason: 'Kartınızı seçin',
+      errorReason: t.errSelectPlayerCard,
     };
   }
 
   if (wolfCards.length === 0) {
     return {
       isValid: false,
-      errorReason: 'Kurt kartı seçin',
+      errorReason: t.errSelectWolfCard,
     };
   }
 
   const playerSum = playerCards.reduce((sum, c) => sum + c.value, 0);
   const wolfSum = wolfCards.reduce((sum, c) => sum + c.value, 0);
 
-  // 1. Eşleştirme (Match): 1 Player, 1 Wolf, playerCard.value === wolfCard.value
+  // 1. Eşleştirme / Perfect: 1 Player, 1 Wolf, playerCard.value === wolfCard.value
   if (playerCards.length === 1 && wolfCards.length === 1) {
     const pCard = playerCards[0];
     const wCard = wolfCards[0];
@@ -107,22 +115,22 @@ export function validateMove(playerCards: Card[], wolfCards: Card[], deckLength:
       return {
         isValid: true,
         type: 'match',
-        title: 'Eşleme',
-        description: `${pCard.value} = ${wCard.value} eşitlendi! 1 yeni kart çekersiniz.`,
+        title: t.matchMoveTitle,
+        description: t.descMatch(pCard.value, wCard.value),
         cardsDrawnCount: drawn,
         drawnBy: 'player',
       };
     }
 
-    // 4. Üst (Higher): 1 Player, 1 Wolf, playerCard.value > wolfCard.value
+    // 4. Üst / Over: 1 Player, 1 Wolf, playerCard.value > wolfCard.value
     if (pCard.value > wCard.value) {
       const diff = pCard.value - wCard.value;
       const actualDrawn = Math.min(diff, deckLength);
       return {
         isValid: true,
         type: 'higher',
-        title: `Üst (+${diff})`,
-        description: `${pCard.value} > ${wCard.value} (Fark: ${diff}). Kurt ${actualDrawn} kart çeker.`,
+        title: `${t.higherMoveTitle} (+${diff})`,
+        description: t.descHigher(pCard.value, wCard.value, diff),
         cardsDrawnCount: actualDrawn,
         drawnBy: 'wolf',
       };
@@ -131,11 +139,11 @@ export function validateMove(playerCards: Card[], wolfCards: Card[], deckLength:
     // Player card is smaller than Wolf card but both are 1 card
     return {
       isValid: false,
-      errorReason: 'Kart küçük',
+      errorReason: t.errCardSmaller,
     };
   }
 
-  // 2. Toplama (Sum): 2+ Player cards, 1 Wolf card, Sum(Player) === Wolf
+  // 2. Toplama / Sum: 2+ Player cards, 1 Wolf card, Sum(Player) === Wolf
   if (playerCards.length > 1 && wolfCards.length === 1) {
     const wCard = wolfCards[0];
     if (playerSum === wCard.value) {
@@ -144,8 +152,8 @@ export function validateMove(playerCards: Card[], wolfCards: Card[], deckLength:
       return {
         isValid: true,
         type: 'sum',
-        title: 'Toplama',
-        description: `(${formula} = ${playerSum}) Kurt'un ${wCard.value} kartını aldı! 1 kart çekersiniz.`,
+        title: t.sumMoveTitle,
+        description: t.descSum(formula, playerSum, wCard.value),
         cardsDrawnCount: drawn,
         drawnBy: 'player',
       };
@@ -153,11 +161,11 @@ export function validateMove(playerCards: Card[], wolfCards: Card[], deckLength:
 
     return {
       isValid: false,
-      errorReason: 'Toplam uyuşmuyor',
+      errorReason: t.errSumMismatch,
     };
   }
 
-  // 3. Bölme (Split): 1 Player card, 2+ Wolf cards, Player === Sum(Wolf)
+  // 3. Bölme / Split: 1 Player card, 2+ Wolf cards, Player === Sum(Wolf)
   if (playerCards.length === 1 && wolfCards.length > 1) {
     const pCard = playerCards[0];
     if (pCard.value === wolfSum) {
@@ -166,8 +174,8 @@ export function validateMove(playerCards: Card[], wolfCards: Card[], deckLength:
       return {
         isValid: true,
         type: 'split',
-        title: 'Bölme',
-        description: `Oyuncu ${pCard.value}, Kurt'un (${formula} = ${wolfSum}) kartlarını böldü! Kurt 1 kart çeker.`,
+        title: t.splitMoveTitle,
+        description: t.descSplit(pCard.value, formula, wolfSum),
         cardsDrawnCount: drawn,
         drawnBy: 'wolf',
       };
@@ -175,14 +183,14 @@ export function validateMove(playerCards: Card[], wolfCards: Card[], deckLength:
 
     return {
       isValid: false,
-      errorReason: 'Bölme uyuşmuyor',
+      errorReason: t.errSplitMismatch,
     };
   }
 
   // Multi to Multi is not a valid Lobo move
   return {
     isValid: false,
-    errorReason: 'Geçersiz seçim',
+    errorReason: t.errInvalidSelection,
   };
 }
 
@@ -197,7 +205,12 @@ export interface HintMove {
   isFavorable: boolean;
 }
 
-export function findPossibleMoves(playerHand: Card[], wolfHand: Card[], deckLength: number): HintMove[] {
+export function findPossibleMoves(
+  playerHand: Card[],
+  wolfHand: Card[],
+  deckLength: number,
+  lang: Language = 'tr'
+): HintMove[] {
   const hints: HintMove[] = [];
 
   // 1. Matches (1 to 1 equality)
@@ -208,7 +221,10 @@ export function findPossibleMoves(playerHand: Card[], wolfHand: Card[], deckLeng
           type: 'match',
           playerCardIds: [p.id],
           wolfCardIds: [w.id],
-          explanation: `Eşleştirme: Oyuncu ${p.value} = Kurt ${w.value} (1 kart çekersiniz)`,
+          explanation:
+            lang === 'tr'
+              ? `Eşleştirme: Oyuncu ${p.value} = Kurt ${w.value} (1 kart çekersiniz)`
+              : `Match: Player ${p.value} = Wolf ${w.value} (You draw 1 card)`,
           isFavorable: true,
         });
       }
@@ -243,7 +259,10 @@ export function findPossibleMoves(playerHand: Card[], wolfHand: Card[], deckLeng
           type: 'sum',
           playerCardIds: pSubset.map((c) => c.id),
           wolfCardIds: [w.id],
-          explanation: `Toplama: (${pSubset.map((c) => c.value).join('+')} = ${sum}) ile Kurt'un ${w.value} kartını al (1 kart çekersiniz)`,
+          explanation:
+            lang === 'tr'
+              ? `Toplama: (${pSubset.map((c) => c.value).join('+')} = ${sum}) ile Kurt'un ${w.value} kartını al (1 kart çekersiniz)`
+              : `Sum: (${pSubset.map((c) => c.value).join('+')} = ${sum}) captures Wolf's ${w.value} (You draw 1 card)`,
           isFavorable: true,
         });
       }
@@ -260,7 +279,10 @@ export function findPossibleMoves(playerHand: Card[], wolfHand: Card[], deckLeng
           type: 'split',
           playerCardIds: [p.id],
           wolfCardIds: wSubset.map((c) => c.id),
-          explanation: `Bölme: Oyuncu ${p.value} ile Kurt'un (${wSubset.map((c) => c.value).join('+')} = ${sum}) kartlarını al (Kurt 1 kart çeker)`,
+          explanation:
+            lang === 'tr'
+              ? `Bölme: Oyuncu ${p.value} ile Kurt'un (${wSubset.map((c) => c.value).join('+')} = ${sum}) kartlarını al (Kurt 1 kart çeker)`
+              : `Split: Player ${p.value} splits Wolf's (${wSubset.map((c) => c.value).join('+')} = ${sum}) (Wolf draws 1 card)`,
           isFavorable: true,
         });
       }
@@ -276,7 +298,10 @@ export function findPossibleMoves(playerHand: Card[], wolfHand: Card[], deckLeng
           type: 'higher',
           playerCardIds: [p.id],
           wolfCardIds: [w.id],
-          explanation: `Üst: Oyuncu ${p.value} > Kurt ${w.value} (Kurt +${diff} kart çeker)`,
+          explanation:
+            lang === 'tr'
+              ? `Üst: Oyuncu ${p.value} > Kurt ${w.value} (Kurt +${diff} kart çeker)`
+              : `Over: Player ${p.value} > Wolf ${w.value} (Wolf draws +${diff} cards)`,
           // If wolf has only 1 card, this might be winning move! Or if diff is small (1 or 2)
           isFavorable: wolfHand.length === 1 || diff <= 2,
         });
@@ -298,3 +323,4 @@ export function findPossibleMoves(playerHand: Card[], wolfHand: Card[], deckLeng
 export function calculateCardsValue(cards: Card[]): number {
   return cards.reduce((sum, card) => sum + card.value, 0);
 }
+

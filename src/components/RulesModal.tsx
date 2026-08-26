@@ -1,14 +1,22 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { X, BookOpen, Layers, CheckCircle, RefreshCw, Flag } from 'lucide-react';
+import { X, BookOpen, Layers, Flag } from 'lucide-react';
+import { Language, translations } from '../utils/i18n';
 
 interface RulesModalProps {
   isOpen: boolean;
   onClose: () => void;
+  lang?: Language;
 }
 
-export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
+export const RulesModal: React.FC<RulesModalProps> = ({
+  isOpen,
+  onClose,
+  lang = 'tr',
+}) => {
   if (!isOpen) return null;
+
+  const t = translations[lang];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#11111b]/80 backdrop-blur-md">
@@ -26,9 +34,11 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-[#cdd6f4]">
-                Lobo Solitaire Oyun Kuralları
+                {t.rulesTitle}
               </h2>
-              <p className="text-xs text-[#a6adc8]">Strateji ve Hamle Rehberi</p>
+              <p className="text-xs text-[#a6adc8]">
+                {lang === 'tr' ? 'Strateji ve Hamle Rehberi' : 'Strategy and Move Guide'}
+              </p>
             </div>
           </div>
 
@@ -45,94 +55,82 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
           {/* General Overview */}
           <div className="bg-[#1e1e2e] p-4 rounded-xl border border-[#313244] space-y-2">
             <h3 className="font-bold text-[#89b4fa] text-sm flex items-center gap-1.5">
-              <Layers className="w-4 h-4" /> Oyunun Amacı & Deste Yapısı
+              <Layers className="w-4 h-4" /> {t.rulesGoalHeader}
             </h3>
             <p className="text-[#a6adc8] leading-relaxed">
-              Lobo, 5 farklı renkte (Gül, Şeftali, Güneş, Zümrüt, Safir) 1'den 10'a kadar numaralandırılmış toplam <strong>50 karttan</strong> oluşur.
-              Başlangıçta Kurt'un 4 açık kartı, Oyuncu'nun 4 açık kartı vardır ve çekme destesinin <strong>en üstteki kartı daima açık görünür</strong>.
+              {t.rulesGoalText}
             </p>
             <div className="p-3 bg-[#11111b] border border-[#45475a]/50 rounded-lg text-xs space-y-1.5">
               <div className="flex items-center gap-2 text-[#f38ba8] font-bold">
-                <span>🐺 Kurt Hamle Mekaniği:</span>
+                <span>🐺 {lang === 'tr' ? 'Kurt Hamle Mekaniği:' : 'Wolf Action Mechanics:'}</span>
               </div>
               <p className="text-[#cdd6f4]">
-                <strong>Kurt asla kendiliğinden hamle yapmaz;</strong> yalnızca sizin yaptığınız hamle türlerine ve aradaki farklara göre desteden kart çeker.
+                {lang === 'tr'
+                  ? 'Kurt asla kendiliğinden hamle yapmaz; yalnızca sizin yaptığınız hamlelere göre desteden kart çeker.'
+                  : 'The Wolf never takes turns; it only draws cards according to the capture actions you perform.'}
               </p>
               <div className="pt-1.5 border-t border-[#313244] flex items-center gap-2 text-[#89b4fa]">
-                <span className="font-bold">🎯 Hamle Seçim Formülü:</span>
+                <span className="font-bold">{lang === 'tr' ? '🎯 Hamle Seçim Formülü:' : '🎯 Actions:'}</span>
               </div>
               <p className="text-[#a6adc8] font-mono text-[11px]">
-                Eşleştirme (1=1) • Toplama (2+=1) • Bölme (1=2+) • Üst (1&gt;1)
+                {lang === 'tr'
+                  ? 'Eşleştirme (1=1) • Toplama (2+=1) • Bölme (1=2+) • Üst (1>1) • Çekilme (Fold)'
+                  : 'Perfect (1=1) • Sum (2+=1) • Split (1=2+) • Over (1>1) • Fold'}
               </p>
             </div>
-            <p className="text-[#a6adc8] leading-relaxed">
-              Hedef: <strong>Kurt'un elini tamamen boşaltmak</strong> ve turlar boyunca toplam <strong>100 puana</strong> ilk ulaşan taraf olmaktır.
-            </p>
           </div>
 
           {/* 4 Move Types */}
           <div>
-            <h3 className="font-bold text-[#f9e2af] text-sm mb-3">4 Temel Hamle Türü:</h3>
+            <h3 className="font-bold text-[#f9e2af] text-sm mb-3">{t.rulesMovesHeader}:</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* 1. Eşleştirme */}
               <div className="p-3.5 rounded-xl bg-[#1e1e2e]/80 border border-[#89b4fa]/30">
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="px-2 py-0.5 rounded bg-[#89b4fa]/20 text-[#89b4fa] font-bold text-xs">
-                    1. Eşleştirme (Match)
+                    1. {t.rulesPerfectTitle}
                   </span>
                 </div>
-                <p className="text-[#a6adc8] text-xs">
-                  Oyuncunun <strong>1 kartı</strong> ile Kurt'un <strong>aynı değerdeki 1 kartı</strong> eşleşir (örn. 5 = 5).
+                <p className="text-[#a6adc8] text-xs leading-relaxed">
+                  {t.rulesPerfectDesc}
                 </p>
-                <div className="mt-2 text-[11px] font-mono text-[#a6e3a1] bg-[#11111b] p-2 rounded">
-                  Sonuç: Kartlar silinir. <strong>Oyuncu 1 kart çeker</strong>.
-                </div>
               </div>
 
               {/* 2. Toplama */}
               <div className="p-3.5 rounded-xl bg-[#1e1e2e]/80 border border-[#a6e3a1]/30">
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="px-2 py-0.5 rounded bg-[#a6e3a1]/20 text-[#a6e3a1] font-bold text-xs">
-                    2. Toplama (Sum)
+                    2. {t.rulesSumTitle}
                   </span>
                 </div>
-                <p className="text-[#a6adc8] text-xs">
-                  Oyuncunun <strong>birden fazla kartının toplamı</strong>, Kurt'un 1 kartına eşit olur (örn. 2 + 5 = 7).
+                <p className="text-[#a6adc8] text-xs leading-relaxed">
+                  {t.rulesSumDesc}
                 </p>
-                <div className="mt-2 text-[11px] font-mono text-[#a6e3a1] bg-[#11111b] p-2 rounded">
-                  Sonuç: Kartlar silinir. <strong>Oyuncu 1 kart çeker</strong>.
-                </div>
               </div>
 
               {/* 3. Bölme */}
               <div className="p-3.5 rounded-xl bg-[#1e1e2e]/80 border border-[#cba6f7]/30">
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="px-2 py-0.5 rounded bg-[#cba6f7]/20 text-[#cba6f7] font-bold text-xs">
-                    3. Bölme (Split)
+                    3. {t.rulesSplitTitle}
                   </span>
                 </div>
-                <p className="text-[#a6adc8] text-xs">
-                  Oyuncunun <strong>1 kartı</strong>, Kurt'un toplamı bu karta eşit olan <strong>birden fazla kartını</strong> alır (örn. 8 = 3 + 5).
+                <p className="text-[#a6adc8] text-xs leading-relaxed">
+                  {t.rulesSplitDesc}
                 </p>
-                <div className="mt-2 text-[11px] font-mono text-[#f9e2af] bg-[#11111b] p-2 rounded">
-                  Sonuç: Kartlar silinir. <strong>Kurt 1 kart çeker</strong>.
-                </div>
               </div>
 
               {/* 4. Üst */}
               <div className="p-3.5 rounded-xl bg-[#1e1e2e]/80 border border-[#fab387]/30">
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="px-2 py-0.5 rounded bg-[#fab387]/20 text-[#fab387] font-bold text-xs">
-                    4. Üst (Higher)
+                    4. {t.rulesOverTitle}
                   </span>
                 </div>
-                <p className="text-[#a6adc8] text-xs">
-                  Oyuncunun <strong>1 kartı</strong>, Kurt'un <strong>daha küçük değerli 1 kartını</strong> alır (örn. 9 &gt; 4).
+                <p className="text-[#a6adc8] text-xs leading-relaxed">
+                  {t.rulesOverDesc}
                 </p>
-                <div className="mt-2 text-[11px] font-mono text-[#f38ba8] bg-[#11111b] p-2 rounded">
-                  Sonuç: Kartlar silinir. Kurt aradaki <strong>fark kadar ({'9 - 4 = 5'})</strong> desteden kart çeker!
-                </div>
               </div>
             </div>
           </div>
@@ -140,17 +138,24 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
           {/* Scoring & Surrender */}
           <div className="bg-[#1e1e2e] p-4 rounded-xl border border-[#313244] space-y-2">
             <h3 className="font-bold text-[#f38ba8] text-sm flex items-center gap-1.5">
-              <Flag className="w-4 h-4" /> Tur Sonu ve Puanlama
+              <Flag className="w-4 h-4" /> {t.rulesScoringHeader}
             </h3>
             <ul className="list-disc list-inside space-y-1.5 text-xs text-[#a6adc8]">
               <li>
-                <strong className="text-[#a6e3a1]">Kurt'un eli boşalırsa:</strong> Turu oyuncu kazanır. Oyuncu <em>elinde kalan kartların değerlerinin toplamını</em> puan olarak hanesine yazar.
+                <strong className="text-[#a6e3a1]">
+                  {lang === 'tr' ? "Kurt'un eli boşalırsa: " : "If Wolf's hand is emptied: "}
+                </strong>
+                {t.rulesScoringClear}
               </li>
               <li>
-                <strong className="text-[#f38ba8]">Oyuncu çekilirse (Merkez butona basılı tutarak):</strong> Turu Kurt kazanır. Kurt <em>elinde kalan kartların değerlerinin toplamını</em> puan olarak hanesine yazar.
+                <strong className="text-[#f38ba8]">
+                  {lang === 'tr' ? 'Oyuncu çekilirse (Fold): ' : 'If Player folds: '}
+                </strong>
+                {t.rulesScoringFold}
               </li>
               <li>
-                <strong className="text-[#f9e2af]">Hedef:</strong> Toplam 100 puana ilk ulaşan taraf oyunun şampiyonu olur!
+                <strong className="text-[#f9e2af]">{t.targetScore}: </strong>
+                {t.rulesScoringWin}
               </li>
             </ul>
           </div>
@@ -162,7 +167,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
             onClick={onClose}
             className="px-5 py-2 rounded-xl bg-[#89b4fa] text-[#11111b] font-bold text-xs hover:bg-[#b4befe] transition-colors cursor-pointer"
           >
-            Anladım, Oyuna Dön
+            {t.closeBtn}
           </button>
         </div>
       </motion.div>

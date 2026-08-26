@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card } from '../types';
 import { CardView } from './CardView';
+import { Language, translations } from '../utils/i18n';
 
 interface WolfZoneProps {
   wolfCards: Card[];
@@ -9,6 +10,7 @@ interface WolfZoneProps {
   hintedCardIds: string[];
   onToggleCard: (cardId: string) => void;
   disabled?: boolean;
+  lang?: Language;
 }
 
 export const WolfZone: React.FC<WolfZoneProps> = ({
@@ -17,8 +19,9 @@ export const WolfZone: React.FC<WolfZoneProps> = ({
   hintedCardIds,
   onToggleCard,
   disabled = false,
+  lang = 'tr',
 }) => {
-  const totalValue = wolfCards.reduce((acc, c) => acc + c.value, 0);
+  const t = translations[lang];
 
   return (
     <section
@@ -30,17 +33,21 @@ export const WolfZone: React.FC<WolfZoneProps> = ({
         <div className="flex items-center gap-2.5">
           <div className="w-2.5 h-2.5 rounded-full bg-[#f38ba8] animate-pulse" />
           <span className="text-xs uppercase tracking-widest text-[#f38ba8] font-bold">
-            Kurtun Eli
+            {t.wolfHandTitle}
           </span>
           <span className="text-[11px] text-[#6c7086] font-mono hidden sm:inline ml-2">
-            (Toplam: <strong className="text-[#f9e2af]">{totalValue} Puan</strong>)
+            ({wolfCards.length} {t.cardCount})
           </span>
         </div>
 
         {/* Target Objective Indicator */}
         <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-[#181825] border border-[#313244] text-[11px] text-[#a6adc8]">
           <span className="w-2 h-2 rounded-full bg-[#89b4fa]" />
-          <span>Hedef: Kurt'un elini tamamen boşalt!</span>
+          <span>
+            {lang === 'tr'
+              ? "Hedef: Kurt'un elini tamamen boşalt!"
+              : "Goal: Clear all cards from the Wolf's hand!"}
+          </span>
         </div>
       </div>
 
@@ -55,8 +62,12 @@ export const WolfZone: React.FC<WolfZoneProps> = ({
                 animate={{ opacity: 1, scale: 1 }}
                 className="col-span-2 px-6 py-4 rounded-xl border border-dashed border-[#a6e3a1]/40 bg-[#a6e3a1]/10 text-center"
               >
-                <p className="text-base font-bold text-[#a6e3a1]">🎉 Kurt'un Eli Boşaldı!</p>
-                <p className="text-xs text-[#cdd6f4]/80 mt-0.5">Oyuncu turu kazandı!</p>
+                <p className="text-base font-bold text-[#a6e3a1]">
+                  {lang === 'tr' ? "🎉 Kurt'un Eli Boşaldı!" : "🎉 Wolf's Hand Cleared!"}
+                </p>
+                <p className="text-xs text-[#cdd6f4]/80 mt-0.5">
+                  {lang === 'tr' ? 'Oyuncu turu kazandı!' : 'Player won the round!'}
+                </p>
               </motion.div>
             ) : (
               wolfCards.map((card) => (
@@ -92,7 +103,7 @@ export const WolfZone: React.FC<WolfZoneProps> = ({
                 {/* Thin, Elegant Typography */}
                 <div className="mt-1 sm:mt-1.5 flex items-center justify-center">
                   <span className="text-[8px] sm:text-[9.5px] md:text-[11px] font-light tracking-[0.4em] text-white/90 uppercase pl-[0.4em]">
-                    KURT
+                    {t.wolfLabel}
                   </span>
                 </div>
               </div>
@@ -105,7 +116,9 @@ export const WolfZone: React.FC<WolfZoneProps> = ({
       <div className="flex items-center justify-end text-[11px] text-[#6c7086] pt-0.5">
         {selectedCardIds.length > 0 && (
           <span className="text-[#89dceb] font-medium">
-            Seçilen Kurt Kartı: {selectedCardIds.length} adet
+            {lang === 'tr'
+              ? `Seçilen Kurt Kartı: ${selectedCardIds.length} adet`
+              : `Selected Wolf Cards: ${selectedCardIds.length}`}
           </span>
         )}
       </div>

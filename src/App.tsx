@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Card, GameState, MoveLogItem, RoundResult, MoveType } from './types';
+import { Card, GameState, MoveLogItem, RoundResult } from './types';
 import {
   dealNewRound,
   validateMove,
@@ -8,6 +8,7 @@ import {
   shuffleDeck,
 } from './utils/gameLogic';
 import { soundManager } from './utils/audio';
+import { Language, translations } from './utils/i18n';
 import { HeaderBar } from './components/HeaderBar';
 import { WolfZone } from './components/WolfZone';
 import { PlayerZone } from './components/PlayerZone';
@@ -18,9 +19,22 @@ import { RulesModal } from './components/RulesModal';
 import { MoveLogDrawer } from './components/MoveLogDrawer';
 import { ResetConfirmModal } from './components/ResetConfirmModal';
 import { AnimatePresence, motion } from 'motion/react';
-import { Info, HelpCircle, Shuffle } from 'lucide-react';
+import { Info, Shuffle } from 'lucide-react';
 
 export default function App() {
+  // Language State with localStorage persistence
+  const [lang, setLang] = useState<Language>(() => {
+    const saved = localStorage.getItem('lobo_lang');
+    return saved === 'en' || saved === 'tr' ? saved : 'tr';
+  });
+
+  const t = translations[lang];
+
+  const handleLanguageChange = (newLang: Language) => {
+    setLang(newLang);
+    localStorage.setItem('lobo_lang', newLang);
+  };
+
   // Game State
   const [gameState, setGameState] = useState<GameState>(() => {
     const initialDeal = dealNewRound();
@@ -99,14 +113,15 @@ export default function App() {
     gameState.selectedPlayerCardIds.length > 0 ||
     gameState.selectedWolfCardIds.length > 0;
 
-  // Move validation
+  // Move validation with current language
   const validation = useMemo(() => {
     return validateMove(
       selectedPlayerCards,
       selectedWolfCards,
-      gameState.deck.length
+      gameState.deck.length,
+      lang
     );
-  }, [selectedPlayerCards, selectedWolfCards, gameState.deck.length]);
+  }, [selectedPlayerCards, selectedWolfCards, gameState.deck.length, lang]);
 
   // Card Selection Handlers
   const handleTogglePlayerCard = (cardId: string) => {
@@ -160,7 +175,7 @@ export default function App() {
     if (!validation.isValid || !validation.type) return;
 
     const moveType = validation.type;
-    const moveTitle = validation.title || 'Hamle';
+    const moveTitle = validation.title || (lang === 'tr' ? 'Hamle' : 'Move');
     const drawnCount = validation.cardsDrawnCount || 0;
     const drawnBy = validation.drawnBy || 'player';
 
@@ -189,7 +204,7 @@ export default function App() {
       if (nextMoveCount % 3 === 0 && newDeck.length > 1) {
         newDeck = shuffleDeck(newDeck);
         soundManager.playShuffle();
-        setShuffleNotification('Deste Karıştırıldı 🔀 (Her 3 elde bir)');
+        setShuffleNotification(t.deckShuffledToast);
         setTimeout(() => setShuffleNotification(null), 2500);
       }
 
@@ -215,7 +230,11 @@ export default function App() {
         id: `move-${Date.now()}`,
         timestamp: Date.now(),
         type: moveType,
-        description: validation.description || `${moveTitle} tamamlandı.`,
+        description:
+          validation.description ||
+          (lang === 'tr'
+            ? `${moveTitle} tamamlandı.`
+            : `${moveTitle} completed.`),
         playerCards: selectedPlayerCards,
         wolfCards: selectedWolfCards,
         cardsDrawn: drawnCards.length,
@@ -383,12 +402,15 @@ export default function App() {
     const moves = findPossibleMoves(
       gameState.playerHand,
       gameState.wolfHand,
-      gameState.deck.length
+      gameState.deck.length,
+      lang
     );
 
     if (moves.length === 0) {
       setHintMessage(
-        'Şu an direkt eşleşen veya toplanabilen bir hamle yok. Daha büyük bir kartla "Üst" hamlesi yapabilir veya çekilebilirsiniz.'
+        lang === 'tr'
+          ? 'Şu an direkt eşleşen veya toplanabilen bir hamle yok. Daha büyük bir kartla "Üst" hamlesi yapabilir veya çekilebilirsiniz.'
+          : 'No direct match or sum moves available right now. You can play a higher card (Over) or fold.'
       );
       setHintedCardIds([]);
       soundManager.playInvalid();
@@ -403,7 +425,11 @@ export default function App() {
       selectedPlayerCardIds: bestMove.playerCardIds,
       selectedWolfCardIds: bestMove.wolfCardIds,
     }));
-    setHintMessage(`💡 Öneri: ${bestMove.explanation}`);
+    setHintMessage(
+      lang === 'tr'
+        ? `💡 Öneri: ${bestMove.explanation}`
+        : `💡 Hint: ${bestMove.explanation}`
+    );
     soundManager.playCardSelect();
   };
 
@@ -416,6 +442,8 @@ export default function App() {
         currentRound={gameState.currentRound}
         targetScore={gameState.targetScore}
         isMuted={isMuted}
+        lang={lang}
+        onLanguageChange={handleLanguageChange}
         onToggleSound={handleToggleSound}
         onShowRules={() => setShowRules(true)}
         onShowHints={handleShowHints}
@@ -455,7 +483,7 @@ export default function App() {
               onClick={() => setHintMessage(null)}
               className="text-[#a6adc8] hover:text-[#cdd6f4] text-xs px-2 py-0.5 rounded cursor-pointer"
             >
-              Kapat
+              {t.closeBtn}
             </button>
           </motion.div>
         )}
@@ -470,6 +498,7 @@ export default function App() {
           hintedCardIds={hintedCardIds}
           onToggleCard={handleToggleWolfCard}
           disabled={gameState.isRoundOver}
+          lang={lang}
         />
 
         {/* Center Dynamic Action Button & Central Dashed Divider */}
@@ -482,6 +511,7 @@ export default function App() {
               onPlayMove={handlePlayMove}
               onSurrender={handleSurrender}
               disabled={gameState.isRoundOver}
+              lang={lang}
             />
           </div>
         </div>
@@ -494,12 +524,14 @@ export default function App() {
           hintedCardIds={hintedCardIds}
           onToggleCard={handleTogglePlayerCard}
           disabled={gameState.isRoundOver}
+          lang={lang}
         />
       </main>
 
       {/* Reset Confirmation Modal */}
       <ResetConfirmModal
         isOpen={showResetConfirm}
+        lang={lang}
         onConfirm={() => {
           handleRestartGame();
           setShowResetConfirm(false);
@@ -517,6 +549,7 @@ export default function App() {
             currentRound={gameState.currentRound}
             targetScore={gameState.targetScore}
             onNextRound={handleNextRound}
+            lang={lang}
           />
         )}
       </AnimatePresence>
@@ -530,18 +563,24 @@ export default function App() {
             wolfTotalScore={gameState.wolfTotalScore}
             stats={gameState.stats}
             onRestartGame={handleRestartGame}
+            lang={lang}
           />
         )}
       </AnimatePresence>
 
       {/* Rules Modal */}
-      <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
+      <RulesModal
+        isOpen={showRules}
+        onClose={() => setShowRules(false)}
+        lang={lang}
+      />
 
       {/* Move Log Drawer */}
       <MoveLogDrawer
         isOpen={showHistory}
         onClose={() => setShowHistory(false)}
         logs={gameState.moveHistory}
+        lang={lang}
       />
     </div>
   );

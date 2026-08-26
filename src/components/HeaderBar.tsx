@@ -9,8 +9,11 @@ import {
   RotateCcw,
   Music,
   Sparkles,
+  Globe,
+  Check,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
+import { Language, translations } from '../utils/i18n';
 
 interface HeaderBarProps {
   playerScore: number;
@@ -18,6 +21,8 @@ interface HeaderBarProps {
   currentRound: number;
   targetScore: number;
   isMuted: boolean;
+  lang: Language;
+  onLanguageChange: (lang: Language) => void;
   onToggleSound: () => void;
   onShowRules: () => void;
   onShowHints: () => void;
@@ -31,6 +36,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   currentRound,
   targetScore,
   isMuted,
+  lang,
+  onLanguageChange,
   onToggleSound,
   onShowRules,
   onShowHints,
@@ -38,9 +45,13 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   onResetGame,
 }) => {
   const [showVolumeMenu, setShowVolumeMenu] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const [bgmVol, setBgmVol] = useState(soundManager.getBgmVolume());
   const [sfxVol, setSfxVol] = useState(soundManager.getSfxVolume());
   const volumeMenuRef = useRef<HTMLDivElement>(null);
+  const langMenuRef = useRef<HTMLDivElement>(null);
+
+  const t = translations[lang];
 
   // Close popup when clicking outside
   useEffect(() => {
@@ -51,14 +62,20 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
       ) {
         setShowVolumeMenu(false);
       }
+      if (
+        langMenuRef.current &&
+        !langMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowLangMenu(false);
+      }
     };
-    if (showVolumeMenu) {
+    if (showVolumeMenu || showLangMenu) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showVolumeMenu]);
+  }, [showVolumeMenu, showLangMenu]);
 
   const handleBgmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value);
@@ -88,7 +105,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           L
         </div>
         <h1 className="text-base sm:text-xl md:text-2xl font-bold tracking-tight text-[#cba6f7] uppercase leading-none">
-          LOBO
+          {t.appTitle}
         </h1>
       </div>
 
@@ -97,7 +114,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         {/* Target */}
         <div className="text-center">
           <p className="text-[8px] sm:text-[10px] uppercase tracking-wider sm:tracking-widest text-[#6c7086] font-semibold whitespace-nowrap">
-            Hedef
+            {t.targetScore}
           </p>
           <p className="text-xs sm:text-lg md:text-xl font-mono font-bold text-[#f9e2af] leading-tight">
             {targetScore}
@@ -107,7 +124,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         {/* Player Score */}
         <div className="text-center">
           <p className="text-[8px] sm:text-[10px] uppercase tracking-wider sm:tracking-widest text-[#6c7086] font-semibold whitespace-nowrap">
-            Senin Puanın
+            {t.youLabel}
           </p>
           <p className="text-xs sm:text-lg md:text-xl font-mono font-bold text-[#a6e3a1] leading-tight">
             {String(playerScore).padStart(3, '0')}
@@ -117,7 +134,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         {/* Wolf Score */}
         <div className="text-center">
           <p className="text-[8px] sm:text-[10px] uppercase tracking-wider sm:tracking-widest text-[#6c7086] font-semibold whitespace-nowrap">
-            Kurt Puanı
+            {t.wolfLabel}
           </p>
           <p className="text-xs sm:text-lg md:text-xl font-mono font-bold text-[#f38ba8] leading-tight">
             {String(wolfScore).padStart(3, '0')}
@@ -127,7 +144,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         {/* Current Round */}
         <div className="text-center">
           <p className="text-[8px] sm:text-[10px] uppercase tracking-wider sm:tracking-widest text-[#6c7086] font-semibold whitespace-nowrap">
-            Tur
+            {t.round}
           </p>
           <p className="text-xs sm:text-lg md:text-xl font-mono font-bold text-[#89b4fa] leading-tight">
             {String(currentRound).padStart(2, '0')}
@@ -141,41 +158,93 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         <button
           id="header-hint-button"
           onClick={onShowHints}
-          title="İpucu Bul"
+          title={t.hint}
           className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-[#1e1e2e] hover:bg-[#313244] border border-[#313244] hover:border-[#f9e2af]/50 text-[#f9e2af] transition-all flex items-center gap-1 text-xs font-medium cursor-pointer"
         >
           <Lightbulb className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span className="hidden md:inline">İpucu</span>
+          <span className="hidden md:inline">{t.hint}</span>
         </button>
 
         {/* History Button */}
         <button
           id="header-history-button"
           onClick={onToggleHistory}
-          title="Hamle Geçmişi"
+          title={t.history}
           className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-[#1e1e2e] hover:bg-[#313244] border border-[#313244] hover:border-[#89b4fa]/50 text-[#a6adc8] hover:text-[#cdd6f4] transition-all flex items-center gap-1 text-xs font-medium cursor-pointer"
         >
           <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span className="hidden lg:inline">Geçmiş</span>
+          <span className="hidden lg:inline">{t.history}</span>
         </button>
 
         {/* Rules Button */}
         <button
           id="header-rules-button"
           onClick={onShowRules}
-          title="Nasıl Oynanır?"
+          title={t.rules}
           className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-[#1e1e2e] hover:bg-[#313244] border border-[#313244] hover:border-[#cba6f7]/50 text-[#cba6f7] transition-all flex items-center gap-1 text-xs font-medium cursor-pointer"
         >
           <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span className="hidden lg:inline">Kurallar</span>
+          <span className="hidden lg:inline">{t.rules}</span>
         </button>
+
+        {/* Language Switcher Dropdown Menu */}
+        <div className="relative" ref={langMenuRef}>
+          <button
+            id="header-language-toggle"
+            onClick={() => setShowLangMenu((prev) => !prev)}
+            title={t.language}
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-[#1e1e2e] hover:bg-[#313244] border border-[#313244] hover:border-[#89b4fa]/50 text-[#89b4fa] transition-colors cursor-pointer flex items-center gap-1 text-xs font-medium"
+          >
+            <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#89b4fa]" />
+            <span className="hidden md:inline uppercase text-[11px] font-bold">
+              {lang}
+            </span>
+          </button>
+
+          {/* Language Selection Popover */}
+          {showLangMenu && (
+            <div
+              id="language-menu-popover"
+              className="absolute right-0 top-full mt-2 w-36 py-1.5 bg-[#181825] border border-[#313244] rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.6)] z-50 flex flex-col backdrop-blur-md"
+            >
+              <button
+                onClick={() => {
+                  onLanguageChange('tr');
+                  setShowLangMenu(false);
+                }}
+                className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                  lang === 'tr'
+                    ? 'bg-[#89b4fa]/15 text-[#89b4fa] font-bold'
+                    : 'text-[#cdd6f4] hover:bg-[#313244]'
+                }`}
+              >
+                <span>🇹🇷 Türkçe</span>
+                {lang === 'tr' && <Check className="w-3.5 h-3.5 text-[#89b4fa]" />}
+              </button>
+              <button
+                onClick={() => {
+                  onLanguageChange('en');
+                  setShowLangMenu(false);
+                }}
+                className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                  lang === 'en'
+                    ? 'bg-[#89b4fa]/15 text-[#89b4fa] font-bold'
+                    : 'text-[#cdd6f4] hover:bg-[#313244]'
+                }`}
+              >
+                <span>🇬🇧 English</span>
+                {lang === 'en' && <Check className="w-3.5 h-3.5 text-[#89b4fa]" />}
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Sound Toggle & Slider Dropdown Menu */}
         <div className="relative" ref={volumeMenuRef}>
           <button
             id="header-sound-toggle"
             onClick={() => setShowVolumeMenu((prev) => !prev)}
-            title={isMuted ? 'Mute' : 'Audio'}
+            title={isMuted ? t.sound : t.mute}
             className="p-1.5 sm:p-2 rounded-lg bg-[#1e1e2e] hover:bg-[#313244] border border-[#313244] text-[#a6adc8] hover:text-[#cdd6f4] transition-colors cursor-pointer flex items-center justify-center"
           >
             {isMuted ? (
@@ -240,7 +309,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         <button
           id="header-restart-button"
           onClick={onResetGame}
-          title="Yeniden Başlat"
+          title={t.reset}
           className="p-1.5 sm:p-2 rounded-lg bg-[#1e1e2e] hover:bg-[#313244] border border-[#313244] text-[#a6adc8] hover:text-[#f38ba8] transition-colors cursor-pointer"
         >
           <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -249,4 +318,3 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
     </header>
   );
 };
-

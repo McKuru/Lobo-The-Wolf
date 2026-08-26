@@ -1,15 +1,24 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MoveLogItem } from '../types';
-import { X, History, Sparkles, Layers } from 'lucide-react';
+import { X, History, Layers } from 'lucide-react';
+import { Language, translations } from '../utils/i18n';
 
 interface MoveLogDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   logs: MoveLogItem[];
+  lang?: Language;
 }
 
-export const MoveLogDrawer: React.FC<MoveLogDrawerProps> = ({ isOpen, onClose, logs }) => {
+export const MoveLogDrawer: React.FC<MoveLogDrawerProps> = ({
+  isOpen,
+  onClose,
+  logs,
+  lang = 'tr',
+}) => {
+  const t = translations[lang];
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -25,7 +34,7 @@ export const MoveLogDrawer: React.FC<MoveLogDrawerProps> = ({ isOpen, onClose, l
             <div className="p-4 border-b border-[#313244] flex items-center justify-between bg-[#1e1e2e]">
               <div className="flex items-center gap-2">
                 <History className="w-4 h-4 text-[#89b4fa]" />
-                <h3 className="font-bold text-[#cdd6f4] text-sm">Hamle Geçmişi</h3>
+                <h3 className="font-bold text-[#cdd6f4] text-sm">{t.historyTitle}</h3>
               </div>
               <button
                 onClick={onClose}
@@ -40,7 +49,7 @@ export const MoveLogDrawer: React.FC<MoveLogDrawerProps> = ({ isOpen, onClose, l
               {logs.length === 0 ? (
                 <div className="text-center py-12 text-[#6c7086] text-xs">
                   <Layers className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                  Henüz bir hamle yapılmadı.
+                  {t.noMovesYet}
                 </div>
               ) : (
                 logs.map((item, index) => (
@@ -50,15 +59,23 @@ export const MoveLogDrawer: React.FC<MoveLogDrawerProps> = ({ isOpen, onClose, l
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-[#89b4fa]">
-                        Hamle #{logs.length - index} ({item.type.toUpperCase()})
+                        {lang === 'tr' ? 'Hamle' : 'Move'} #{logs.length - index} ({item.type.toUpperCase()})
                       </span>
                       <span className="text-[10px] text-[#6c7086]">
-                        {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        {new Date(item.timestamp).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                        })}
                       </span>
                     </div>
                     <p className="text-[#cdd6f4]">{item.description}</p>
                     <div className="flex items-center gap-2 text-[10px] text-[#a6adc8] pt-1 border-t border-[#313244]/60">
-                      <span>Çekilen: {item.cardsDrawn} kart ({item.drawer === 'player' ? 'Oyuncu' : 'Kurt'})</span>
+                      <span>
+                        {lang === 'tr' ? 'Çekilen:' : 'Drawn:'} {item.cardsDrawn}{' '}
+                        {t.cardCount} (
+                        {item.drawer === 'player' ? t.youLabel : t.wolfLabel})
+                      </span>
                     </div>
                   </div>
                 ))

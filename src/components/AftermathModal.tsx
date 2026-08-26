@@ -4,7 +4,8 @@ import { RoundResult } from '../types';
 import { CardView } from './CardView';
 import { soundManager } from '../utils/audio';
 import confetti from 'canvas-confetti';
-import { Trophy, Skull, ArrowRight, Sparkles } from 'lucide-react';
+import { Trophy, Skull, ArrowRight } from 'lucide-react';
+import { Language, translations } from '../utils/i18n';
 
 interface AftermathModalProps {
   roundResult: RoundResult;
@@ -13,6 +14,7 @@ interface AftermathModalProps {
   currentRound: number;
   targetScore: number;
   onNextRound: () => void;
+  lang?: Language;
 }
 
 export const AftermathModal: React.FC<AftermathModalProps> = ({
@@ -22,10 +24,12 @@ export const AftermathModal: React.FC<AftermathModalProps> = ({
   currentRound,
   targetScore,
   onNextRound,
+  lang = 'tr',
 }) => {
   const isPlayerWinner = roundResult.winner === 'player';
   const roundPoints = isPlayerWinner ? roundResult.playerRoundScore : roundResult.wolfRoundScore;
   const cardsToShow = isPlayerWinner ? roundResult.playerCardsRemaining : roundResult.wolfCardsRemaining;
+  const t = translations[lang];
 
   // Animated counting for points
   const [animatedPoints, setAnimatedPoints] = useState(0);
@@ -96,18 +100,18 @@ export const AftermathModal: React.FC<AftermathModalProps> = ({
 
         {/* Title */}
         <h2 className="text-2xl sm:text-3xl font-black text-[#cdd6f4] tracking-wide">
-          {isPlayerWinner ? 'Turu Kazandınız!' : 'Kurt Kazandı!'}
+          {isPlayerWinner ? t.roundWinTitle : t.roundLossTitle}
         </h2>
         <p className="text-xs sm:text-sm text-[#a6adc8] mt-1 max-w-xs">
           {isPlayerWinner
-            ? "Kurt'un elindeki tüm kartları başarıyla temizlediniz!"
-            : 'Turdan çekildiniz. Kurt kalan kartlarının puanını kazandı.'}
+            ? t.roundWinDesc
+            : t.roundLossDesc}
         </p>
 
         {/* Animated Point Counter */}
         <div className="my-5 py-4 px-6 rounded-xl bg-[#1e1e2e] border border-[#313244] w-full flex flex-col items-center">
           <span className="text-xs uppercase tracking-wider text-[#a6adc8] font-bold">
-            Tur Sonu Puanı
+            {t.roundScoreTitle}
           </span>
           <div className="flex items-baseline gap-1 my-1">
             <span
@@ -117,10 +121,12 @@ export const AftermathModal: React.FC<AftermathModalProps> = ({
             >
               +{animatedPoints}
             </span>
-            <span className="text-sm font-semibold text-[#a6adc8]">Puan</span>
+            <span className="text-sm font-semibold text-[#a6adc8]">{t.points}</span>
           </div>
           <span className="text-[11px] text-[#6c7086]">
-            {isPlayerWinner ? "Elinizde kalan kartların toplamı" : "Kurt'un elinde kalan kartların toplamı"}
+            {isPlayerWinner
+              ? (lang === 'tr' ? 'Elinizde kalan kartların toplamı' : 'Sum of remaining cards in your hand')
+              : (lang === 'tr' ? "Kurt'un elinde kalan kartların toplamı" : 'Sum of remaining cards in Wolf hand')}
           </span>
         </div>
 
@@ -128,7 +134,7 @@ export const AftermathModal: React.FC<AftermathModalProps> = ({
         {cardsToShow.length > 0 && (
           <div className="w-full mb-5">
             <p className="text-xs font-semibold text-[#a6adc8] mb-2 text-left">
-              Puan Kazandıran Kartlar ({cardsToShow.length} Kart):
+              {t.scoringCards} ({cardsToShow.length} {t.cardCount}):
             </p>
             <div className="flex items-center justify-center flex-wrap gap-2 max-h-36 overflow-y-auto p-1">
               {cardsToShow.map((c) => (
@@ -142,10 +148,10 @@ export const AftermathModal: React.FC<AftermathModalProps> = ({
         <div className="w-full grid grid-cols-2 gap-3 mb-6 text-left">
           <div className="p-3 rounded-xl bg-[#1e1e2e] border border-[#313244]">
             <div className="flex items-center justify-between text-xs text-[#a6adc8]">
-              <span>Oyuncu Toplamı</span>
+              <span>{t.youLabel}</span>
               <span className="text-[#a6e3a1] font-bold">🎯 {targetScore}</span>
             </div>
-            <p className="text-xl font-bold text-[#89b4fa] mt-1">{playerTotalScore} Puan</p>
+            <p className="text-xl font-bold text-[#89b4fa] mt-1">{playerTotalScore} {t.points}</p>
             <div className="w-full bg-[#313244] h-2 rounded-full mt-2 overflow-hidden">
               <div
                 className="bg-[#89b4fa] h-full transition-all duration-500 rounded-full"
@@ -156,10 +162,10 @@ export const AftermathModal: React.FC<AftermathModalProps> = ({
 
           <div className="p-3 rounded-xl bg-[#1e1e2e] border border-[#313244]">
             <div className="flex items-center justify-between text-xs text-[#a6adc8]">
-              <span>Kurt Toplamı</span>
+              <span>{t.wolfLabel}</span>
               <span className="text-[#f38ba8] font-bold">🎯 {targetScore}</span>
             </div>
-            <p className="text-xl font-bold text-[#f38ba8] mt-1">{wolfTotalScore} Puan</p>
+            <p className="text-xl font-bold text-[#f38ba8] mt-1">{wolfTotalScore} {t.points}</p>
             <div className="w-full bg-[#313244] h-2 rounded-full mt-2 overflow-hidden">
               <div
                 className="bg-[#f38ba8] h-full transition-all duration-500 rounded-full"
@@ -175,7 +181,7 @@ export const AftermathModal: React.FC<AftermathModalProps> = ({
           onClick={onNextRound}
           className="w-full py-3.5 px-6 rounded-xl font-bold text-base bg-gradient-to-r from-[#89b4fa] to-[#cba6f7] text-[#11111b] hover:shadow-[0_0_25px_rgba(137,180,250,0.5)] transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
         >
-          <span>Sonraki Tura Geç (Tur {currentRound + 1})</span>
+          <span>{t.nextRound} ({t.round} {currentRound + 1})</span>
           <ArrowRight className="w-5 h-5" />
         </button>
       </motion.div>
