@@ -1,0 +1,6 @@
+{
+  "name": "Lobo Solitaire",
+  "description": "A strategic Catppuccin-themed Solitaire card game where you battle against the Wolf to empty its hand and reach 100 points.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
