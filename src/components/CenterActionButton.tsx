@@ -151,7 +151,7 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
               {validation.isValid ? (
                 <>
                   <span className="text-[#11111b] font-black text-sm sm:text-xl md:text-2xl tracking-tighter uppercase leading-none">
-                    {t.playMove}
+                    {t.play}
                   </span>
                   <span className="text-[#11111b] text-[8px] sm:text-[10px] md:text-[11px] font-bold opacity-85 mt-0.5 uppercase text-center px-1 whitespace-nowrap">
                     {validation.title || (lang === 'tr' ? 'Hamle' : 'Move')}
@@ -160,7 +160,7 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
               ) : (
                 <>
                   <span className="text-[#f38ba8] font-black text-xs sm:text-sm md:text-base tracking-tight uppercase leading-none">
-                    {t.invalidMove}
+                    {t.invalid}
                   </span>
                   <span className="text-[#a6adc8] text-[7px] sm:text-[9px] font-semibold mt-0.5 text-center px-1 whitespace-nowrap">
                     {validation.errorReason || (lang === 'tr' ? 'Hata' : 'Error')}
@@ -189,7 +189,7 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
                 }
               `}
             >
-              {/* Radial or linear hold progress indicator fill */}
+              {/* Charge gauge filling up from bottom */}
               {isPressing && (
                 <div
                   className="absolute inset-0 bg-gradient-to-t from-[#f38ba8]/35 via-[#f38ba8]/60 to-[#f38ba8]/90 pointer-events-none transition-all duration-75"
@@ -209,9 +209,9 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
                 `}
               >
                 {isCharged
-                  ? (lang === 'tr' ? 'BIRAKIN' : 'RELEASE')
+                  ? t.releaseToFold.toUpperCase()
                   : isPressing
-                  ? (lang === 'tr' ? 'ÇEKİL' : 'FOLD')
+                  ? t.fold.toUpperCase()
                   : 'LOBO'}
               </span>
               <span
@@ -220,10 +220,10 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
                 `}
               >
                 {isCharged
-                  ? (lang === 'tr' ? 'Çekil' : 'Fold')
+                  ? t.fold
                   : isPressing
                   ? `%${Math.round(pressProgress * 100)}`
-                  : 'Fold / Çekil'}
+                  : t.fold}
               </span>
             </button>
           </div>

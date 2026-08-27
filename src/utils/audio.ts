@@ -1,79 +1,66 @@
 /**
- * Web Audio API synthesizer and Background Music Engine for Lobo Solitaire
+ * Web Audio API Sound Synthesizer Engine & BGM Controller
+ * Provides natural organic acoustics, chill Lo-Fi chords, and soft tactile sound effects.
  */
 
 class SoundEngine {
   private ctx: AudioContext | null = null;
   private isMuted: boolean = false;
-  private sfxVolume: number = 0.75;
-  private bgmVolume: number = 0.5;
-
-  // Master SFX Gain
+  private sfxVolume: number = 0.8;
+  private bgmVolume: number = 0.55;
   private sfxGainNode: GainNode | null = null;
-
-  // BGM Gain & Audio
   private bgmGainNode: GainNode | null = null;
-  private bgmAudio: HTMLAudioElement | null = null;
   private isMusicPlaying: boolean = false;
+  private bgmAudio: HTMLAudioElement | null = null;
   private musicLoopTimer: number | null = null;
-  private currentChordIndex: number = 0;
 
   constructor() {
+    // Lazy AudioContext initialization
     if (typeof window !== 'undefined') {
       try {
-        this.bgmAudio = new Audio('/bgm.mp3');
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        this.ctx = new AudioCtx();
+        this.setupGainNodes();
+
+        // Optional HTML5 audio for Lo-Fi MP3 stream if available
+        this.bgmAudio = new Audio('https://assets.mixkit.co/music/preview/mixkit-chill-bro-494.mp3');
         this.bgmAudio.loop = true;
         this.bgmAudio.volume = this.bgmVolume;
-        // Perfect seamless loop fallback listener
-        this.bgmAudio.addEventListener('ended', () => {
-          if (this.bgmAudio) {
-            this.bgmAudio.currentTime = 0;
-            this.bgmAudio.play().catch(() => {});
-          }
-        });
-      } catch {
-        this.bgmAudio = null;
+      } catch (e) {
+        console.warn('AudioContext not supported or blocked in this environment', e);
       }
     }
   }
 
-  public initContext(): AudioContext | null {
-    if (!this.ctx && typeof window !== 'undefined') {
-      const AudioContextClass =
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext })
-          .webkitAudioContext;
-      if (AudioContextClass) {
-        this.ctx = new AudioContextClass();
+  private setupGainNodes() {
+    if (!this.ctx) return;
+    try {
+      this.sfxGainNode = this.ctx.createGain();
+      this.sfxGainNode.gain.setValueAtTime(this.isMuted ? 0 : this.sfxVolume, this.ctx.currentTime);
+      this.sfxGainNode.connect(this.ctx.destination);
 
-        // Create Master SFX Gain
-        this.sfxGainNode = this.ctx.createGain();
-        this.sfxGainNode.gain.setValueAtTime(
-          this.isMuted ? 0 : this.sfxVolume,
-          this.ctx.currentTime
-        );
-        this.sfxGainNode.connect(this.ctx.destination);
-
-        // Create BGM Synth Gain
-        this.bgmGainNode = this.ctx.createGain();
-        this.bgmGainNode.gain.setValueAtTime(
-          this.isMuted ? 0 : this.bgmVolume * 0.35,
-          this.ctx.currentTime
-        );
-        this.bgmGainNode.connect(this.ctx.destination);
-      }
+      this.bgmGainNode = this.ctx.createGain();
+      this.bgmGainNode.gain.setValueAtTime(this.isMuted ? 0 : this.bgmVolume * 0.35, this.ctx.currentTime);
+      this.bgmGainNode.connect(this.ctx.destination);
+    } catch {
+      // Ignore
     }
+  }
 
+  private initContext() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      this.ctx = new AudioCtx();
+      this.setupGainNodes();
+    }
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
     }
-
-    return this.ctx;
   }
 
-  private getContext(): AudioContext | null {
-    if (this.isMuted) return null;
-    return this.initContext();
+  public getContext(): AudioContext | null {
+    this.initContext();
+    return this.ctx;
   }
 
   public setMuted(muted: boolean) {
@@ -179,67 +166,62 @@ class SoundEngine {
       }
 
       const now = ctx.currentTime;
-      const currentChord = chordProgressions[this.currentChordIndex];
-      this.currentChordIndex = (this.currentChordIndex + 1) % chordProgressions.length;
+      const chordIdx = Math.floor((Date.now() / 4200) % chordProgressions.length);
+      const freqs = chordProgressions[chordIdx];
 
-      // Soft Low-pass Filter for that mellow warm Lo-Fi vinyl warmth
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(750, now);
-      filter.Q.setValueAtTime(1.5, now);
-      filter.connect(this.bgmGainNode);
-
-      // Play soft Rhodes-like chime notes with subtle stagger
-      currentChord.forEach((freq, noteIdx) => {
+      // Play soft warm electric piano chord
+      freqs.forEach((freq, i) => {
         const osc = ctx.createOscillator();
-        const noteGain = ctx.createGain();
-        const noteStart = now + noteIdx * 0.08;
-        const duration = 2.7;
+        const oscHarmonic = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
 
-        // Sine/Triangle blend for warm electric piano tone
-        osc.type = noteIdx % 2 === 0 ? 'sine' : 'triangle';
-        osc.frequency.setValueAtTime(freq, noteStart);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(650 + (i * 80), now);
 
-        // Soft attack, gentle decay
-        noteGain.gain.setValueAtTime(0, noteStart);
-        noteGain.gain.linearRampToValueAtTime(0.08, noteStart + 0.12);
-        noteGain.gain.exponentialRampToValueAtTime(0.0005, noteStart + duration);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + i * 0.04);
 
-        osc.connect(noteGain);
-        noteGain.connect(filter);
+        // Gentle overtone
+        oscHarmonic.type = 'triangle';
+        oscHarmonic.frequency.setValueAtTime(freq * 2, now + i * 0.04);
 
-        osc.start(noteStart);
-        osc.stop(noteStart + duration);
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.045, now + 0.35 + i * 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 3.8);
+
+        osc.connect(filter);
+        oscHarmonic.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.bgmGainNode!);
+
+        osc.start(now + i * 0.04);
+        oscHarmonic.start(now + i * 0.04);
+        osc.stop(now + 4.0);
+        oscHarmonic.stop(now + 4.0);
       });
-
-      // Sub Bass Note
-      const bassFreq = currentChord[0] / 2;
-      const bassOsc = ctx.createOscillator();
-      const bassGain = ctx.createGain();
-      bassOsc.type = 'sine';
-      bassOsc.frequency.setValueAtTime(bassFreq, now);
-
-      bassGain.gain.setValueAtTime(0, now);
-      bassGain.gain.linearRampToValueAtTime(0.12, now + 0.08);
-      bassGain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
-
-      bassOsc.connect(bassGain);
-      bassGain.connect(this.bgmGainNode);
-
-      bassOsc.start(now);
-      bassOsc.stop(now + 2.5);
     };
 
-    // Immediate first chord
     playChordStep();
-
-    // 4 beats per bar, 80 BPM = 3 seconds per step, looping seamlessly
-    this.musicLoopTimer = window.setInterval(() => {
-      playChordStep();
-    }, 2800);
+    this.musicLoopTimer = window.setInterval(playChordStep, 4000);
   }
 
-  // Card select sound: high crystal click
+  public stopMusic() {
+    this.isMusicPlaying = false;
+    if (this.bgmAudio) {
+      this.bgmAudio.pause();
+    }
+    if (this.musicLoopTimer) {
+      clearInterval(this.musicLoopTimer);
+      this.musicLoopTimer = null;
+    }
+  }
+
+  // ================= SFX METHODS =================
+
+  /**
+   * Card select sound: high crystal click (Preserved exactly as requested!)
+   */
   public playCardSelect() {
     const ctx = this.getContext();
     if (!ctx || !this.sfxGainNode) return;
@@ -262,7 +244,9 @@ class SoundEngine {
     osc.stop(now + 0.08);
   }
 
-  // Card deselect sound: soft lower drop
+  /**
+   * Card deselect sound: soft lower drop
+   */
   public playCardDeselect() {
     const ctx = this.getContext();
     if (!ctx || !this.sfxGainNode) return;
@@ -285,42 +269,103 @@ class SoundEngine {
     osc.stop(now + 0.06);
   }
 
-  // Play move success chime
+  /**
+   * Play move success sound - Natural, organic, acoustic chime & warm wooden resonance
+   * Designed specifically to match the calm Lo-Fi aesthetic rather than retro 8-bit synths.
+   */
   public playMoveSuccess(type: 'match' | 'sum' | 'split' | 'higher') {
     const ctx = this.getContext();
     if (!ctx || !this.sfxGainNode) return;
 
     const now = ctx.currentTime;
-    const baseFreqs =
-      {
-        match: [523.25, 659.25, 783.99], // C5, E5, G5
-        sum: [440, 554.37, 659.25, 880], // A4, C#5, E5, A5
-        split: [587.33, 739.99, 880], // D5, F#5, A5
-        higher: [392, 523.25, 659.25, 587.33], // G4, C5, E5, D5
-      }[type] || [523.25, 659.25];
 
-    baseFreqs.forEach((freq, idx) => {
+    // Organic acoustic configurations (Harmonics, frequencies & timing)
+    const moveConfigs: Record<
+      'match' | 'sum' | 'split' | 'higher',
+      { notes: number[]; filterCutoff: number; duration: number; speed: number }
+    > = {
+      // Perfect match: Warm acoustic fifth bell resonance (F4, C5, A5)
+      match: {
+        notes: [349.23, 523.25, 880.0],
+        filterCutoff: 1600,
+        duration: 0.45,
+        speed: 0.04,
+      },
+      // Sum: Warm ascending acoustic harp triad (D4, G4, B4, D5)
+      sum: {
+        notes: [293.66, 392.0, 493.88, 587.33],
+        filterCutoff: 1500,
+        duration: 0.42,
+        speed: 0.05,
+      },
+      // Split: Serene acoustic kalimba harmony (E4, A4, C#5, E5)
+      split: {
+        notes: [329.63, 440.0, 554.37, 659.25],
+        filterCutoff: 1700,
+        duration: 0.45,
+        speed: 0.05,
+      },
+      // Higher / Over: Rich wooden marimba resonant interval (G3, D4, G4)
+      higher: {
+        notes: [196.0, 293.66, 392.0],
+        filterCutoff: 1300,
+        duration: 0.40,
+        speed: 0.045,
+      },
+    };
+
+    const cfg = moveConfigs[type] || moveConfigs.match;
+
+    // Create a smooth, organic lowpass filter to remove harsh digital edges
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(cfg.filterCutoff, now);
+    filter.Q.setValueAtTime(1.2, now);
+    filter.connect(this.sfxGainNode);
+
+    cfg.notes.forEach((freq, idx) => {
+      const startTime = now + idx * cfg.speed;
+      const duration = cfg.duration;
+
+      // Fundamental warm sine
       const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const startTime = now + idx * 0.045;
-      const duration = 0.22;
-
-      osc.type = 'triangle';
+      osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, startTime);
 
-      gain.gain.setValueAtTime(0, startTime);
-      gain.gain.linearRampToValueAtTime(0.15, startTime + 0.02);
+      // Subtle soft warm acoustic body overtone (triangle)
+      const oscOvertone = ctx.createOscillator();
+      oscOvertone.type = 'triangle';
+      oscOvertone.frequency.setValueAtTime(freq * 2, startTime);
+
+      const gain = ctx.createGain();
+      const overtoneGain = ctx.createGain();
+
+      // Natural acoustic envelope: gentle soft attack (~10ms) and warm ringing decay
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.linearRampToValueAtTime(0.16, startTime + 0.015);
       gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
 
+      overtoneGain.gain.setValueAtTime(0.001, startTime);
+      overtoneGain.gain.linearRampToValueAtTime(0.04, startTime + 0.01);
+      overtoneGain.gain.exponentialRampToValueAtTime(0.001, startTime + duration * 0.6);
+
       osc.connect(gain);
-      gain.connect(this.sfxGainNode!);
+      oscOvertone.connect(overtoneGain);
+
+      gain.connect(filter);
+      overtoneGain.connect(filter);
 
       osc.start(startTime);
+      oscOvertone.start(startTime);
+
       osc.stop(startTime + duration);
+      oscOvertone.stop(startTime + duration);
     });
   }
 
-  // Card draw sound: swish / flip
+  /**
+   * Card draw sound: swish / flip
+   */
   public playCardDraw() {
     const ctx = this.getContext();
     if (!ctx || !this.sfxGainNode) return;
@@ -343,7 +388,9 @@ class SoundEngine {
     osc.stop(now + 0.1);
   }
 
-  // Wolf card draw sound (growly/deep)
+  /**
+   * Wolf card draw sound (growly/deep)
+   */
   public playWolfDraw() {
     const ctx = this.getContext();
     if (!ctx || !this.sfxGainNode) return;
@@ -366,7 +413,9 @@ class SoundEngine {
     osc.stop(now + 0.18);
   }
 
-  // Long press tick (charging up surrender)
+  /**
+   * Long press tick (charging up surrender)
+   */
   public playChargeTick(progress: number) {
     const ctx = this.getContext();
     if (!ctx || !this.sfxGainNode) return;
@@ -389,7 +438,9 @@ class SoundEngine {
     osc.stop(now + 0.03);
   }
 
-  // Error/Invalid move sound
+  /**
+   * Error / Invalid move sound
+   */
   public playInvalid() {
     const ctx = this.getContext();
     if (!ctx || !this.sfxGainNode) return;
@@ -412,63 +463,81 @@ class SoundEngine {
     osc.stop(now + 0.16);
   }
 
-  // Round Won by Player (Fanfare)
+  /**
+   * Round Won / Victory Fanfare (Warm organic acoustic flourish)
+   */
   public playRoundWin() {
     const ctx = this.getContext();
     if (!ctx || !this.sfxGainNode) return;
 
     const now = ctx.currentTime;
     const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+    
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(2200, now);
+    filter.connect(this.sfxGainNode);
+
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      const start = now + i * 0.1;
-      const duration = i === notes.length - 1 ? 0.6 : 0.25;
+      const start = now + i * 0.09;
+      const duration = i === notes.length - 1 ? 0.7 : 0.35;
 
-      osc.type = 'triangle';
+      osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, start);
 
-      gain.gain.setValueAtTime(0, start);
-      gain.gain.linearRampToValueAtTime(0.2, start + 0.02);
+      gain.gain.setValueAtTime(0.001, start);
+      gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
 
       osc.connect(gain);
-      gain.connect(this.sfxGainNode!);
+      gain.connect(filter);
 
       osc.start(start);
       osc.stop(start + duration);
     });
   }
 
-  // Round Lost / Surrender
+  /**
+   * Round Lost / Game Lost / Surrender (Smooth, natural melancholic acoustic tones)
+   */
   public playRoundLoss() {
     const ctx = this.getContext();
     if (!ctx || !this.sfxGainNode) return;
 
     const now = ctx.currentTime;
-    const notes = [392, 369.99, 329.63, 261.63]; // G4, F#4, E4, C4
+    const notes = [392.0, 349.23, 329.63, 261.63]; // G4, F4, E4, C4
+    
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1400, now);
+    filter.connect(this.sfxGainNode);
+
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       const start = now + i * 0.12;
-      const duration = 0.35;
+      const duration = 0.45;
 
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, start);
 
-      gain.gain.setValueAtTime(0, start);
-      gain.gain.linearRampToValueAtTime(0.16, start + 0.02);
+      gain.gain.setValueAtTime(0.001, start);
+      gain.gain.linearRampToValueAtTime(0.15, start + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
 
       osc.connect(gain);
-      gain.connect(this.sfxGainNode!);
+      gain.connect(filter);
 
       osc.start(start);
       osc.stop(start + duration);
     });
   }
 
-  // Card shuffle sound: rapid cascading card sweeps
+  /**
+   * Card shuffle sound: rapid cascading card sweeps
+   */
   public playShuffle() {
     const ctx = this.getContext();
     if (!ctx || !this.sfxGainNode) return;
@@ -494,7 +563,9 @@ class SoundEngine {
     }
   }
 
-  // Score count tick for aftermath or SFX volume slider preview
+  /**
+   * Score count tick for aftermath or SFX volume slider preview
+   */
   public playScoreCountTick() {
     const ctx = this.getContext();
     if (!ctx || !this.sfxGainNode) return;
@@ -503,10 +574,10 @@ class SoundEngine {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(880 + Math.random() * 80, now);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(640 + Math.random() * 60, now);
 
-    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.setValueAtTime(0.08, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
 
     osc.connect(gain);
@@ -518,4 +589,3 @@ class SoundEngine {
 }
 
 export const soundManager = new SoundEngine();
-

@@ -37,7 +37,7 @@ export interface RoundResult {
   wolfRoundScore: number;
   playerCardsRemaining: Card[];
   wolfCardsRemaining: Card[];
-  reason: 'wolf_empty' | 'player_surrender' | 'deck_empty_no_moves';
+  reason: 'wolf_empty' | 'player_surrender' | 'no_valid_moves' | 'deck_empty_no_moves';
   cardsTotalScore: number;
 }
 

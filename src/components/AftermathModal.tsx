@@ -4,7 +4,7 @@ import { RoundResult } from '../types';
 import { CardView } from './CardView';
 import { soundManager } from '../utils/audio';
 import confetti from 'canvas-confetti';
-import { Trophy, Skull, ArrowRight } from 'lucide-react';
+import { Trophy, Skull, ArrowRight, AlertCircle } from 'lucide-react';
 import { Language, translations } from '../utils/i18n';
 
 interface AftermathModalProps {
@@ -27,6 +27,7 @@ export const AftermathModal: React.FC<AftermathModalProps> = ({
   lang = 'tr',
 }) => {
   const isPlayerWinner = roundResult.winner === 'player';
+  const isNoMoves = roundResult.reason === 'no_valid_moves';
   const roundPoints = isPlayerWinner ? roundResult.playerRoundScore : roundResult.wolfRoundScore;
   const cardsToShow = isPlayerWinner ? roundResult.playerCardsRemaining : roundResult.wolfCardsRemaining;
   const t = translations[lang];
@@ -35,7 +36,7 @@ export const AftermathModal: React.FC<AftermathModalProps> = ({
   const [animatedPoints, setAnimatedPoints] = useState(0);
 
   useEffect(() => {
-    // Play winner sound effect
+    // Play winner or loser sound effect
     if (isPlayerWinner) {
       soundManager.playRoundWin();
       confetti({
@@ -76,44 +77,58 @@ export const AftermathModal: React.FC<AftermathModalProps> = ({
         initial={{ scale: 0.85, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.85, opacity: 0, y: 20 }}
-        className="w-full max-w-lg rounded-2xl border border-[#45475a] bg-[#181825] shadow-2xl p-6 sm:p-8 flex flex-col items-center text-center relative overflow-hidden"
+        className="w-full max-w-lg rounded-3xl border-2 border-[#45475a] bg-[#181825] shadow-2xl p-6 sm:p-8 flex flex-col items-center text-center relative overflow-hidden"
       >
         {/* Ambient Top Glow */}
         <div
           className={`absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-48 rounded-full blur-3xl pointer-events-none opacity-40
-            ${isPlayerWinner ? 'bg-[#a6e3a1]' : 'bg-[#f38ba8]'}
+            ${isPlayerWinner ? 'bg-[#a6e3a1]' : isNoMoves ? 'bg-[#fab387]' : 'bg-[#f38ba8]'}
           `}
         />
 
         {/* Winner Badge / Icon */}
         <div
-          className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border shadow-xl
+          className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border-2 shadow-xl
             ${
               isPlayerWinner
                 ? 'bg-[#a6e3a1]/20 border-[#a6e3a1] text-[#a6e3a1]'
+                : isNoMoves
+                ? 'bg-[#fab387]/20 border-[#fab387] text-[#fab387]'
                 : 'bg-[#f38ba8]/20 border-[#f38ba8] text-[#f38ba8]'
             }
           `}
         >
-          {isPlayerWinner ? <Trophy className="w-9 h-9 animate-bounce" /> : <Skull className="w-9 h-9" />}
+          {isPlayerWinner ? (
+            <Trophy className="w-9 h-9 animate-bounce" />
+          ) : isNoMoves ? (
+            <AlertCircle className="w-9 h-9" />
+          ) : (
+            <Skull className="w-9 h-9" />
+          )}
         </div>
 
         {/* Title */}
         <h2 className="text-2xl sm:text-3xl font-black text-[#cdd6f4] tracking-wide">
-          {isPlayerWinner ? t.roundWinTitle : t.roundLossTitle}
-        </h2>
-        <p className="text-xs sm:text-sm text-[#a6adc8] mt-1 max-w-xs">
           {isPlayerWinner
-            ? t.roundWinDesc
-            : t.roundLossDesc}
+            ? t.roundWonTitle
+            : isNoMoves
+            ? t.roundNoMovesTitle
+            : t.roundLostTitle}
+        </h2>
+        <p className="text-xs sm:text-sm text-[#a6adc8] mt-1 max-w-sm">
+          {isPlayerWinner
+            ? t.roundWonSubtitle
+            : isNoMoves
+            ? t.roundNoMovesSubtitle
+            : t.roundLostSubtitle}
         </p>
 
         {/* Animated Point Counter */}
-        <div className="my-5 py-4 px-6 rounded-xl bg-[#1e1e2e] border border-[#313244] w-full flex flex-col items-center">
+        <div className="my-5 py-4 px-6 rounded-2xl bg-[#1e1e2e] border border-[#313244] w-full flex flex-col items-center">
           <span className="text-xs uppercase tracking-wider text-[#a6adc8] font-bold">
             {t.roundScoreTitle}
           </span>
-          <div className="flex items-baseline gap-1 my-1">
+          <div className="flex items-baseline gap-1.5 my-1">
             <span
               className={`text-4xl sm:text-5xl font-extrabold font-mono tracking-tight
                 ${isPlayerWinner ? 'text-[#a6e3a1]' : 'text-[#f38ba8]'}
@@ -146,7 +161,7 @@ export const AftermathModal: React.FC<AftermathModalProps> = ({
 
         {/* Total Score Progression Bar */}
         <div className="w-full grid grid-cols-2 gap-3 mb-6 text-left">
-          <div className="p-3 rounded-xl bg-[#1e1e2e] border border-[#313244]">
+          <div className="p-3 rounded-2xl bg-[#1e1e2e] border border-[#313244]">
             <div className="flex items-center justify-between text-xs text-[#a6adc8]">
               <span>{t.youLabel}</span>
               <span className="text-[#a6e3a1] font-bold">🎯 {targetScore}</span>
@@ -160,7 +175,7 @@ export const AftermathModal: React.FC<AftermathModalProps> = ({
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-[#1e1e2e] border border-[#313244]">
+          <div className="p-3 rounded-2xl bg-[#1e1e2e] border border-[#313244]">
             <div className="flex items-center justify-between text-xs text-[#a6adc8]">
               <span>{t.wolfLabel}</span>
               <span className="text-[#f38ba8] font-bold">🎯 {targetScore}</span>
@@ -179,9 +194,9 @@ export const AftermathModal: React.FC<AftermathModalProps> = ({
         <button
           id="next-round-button"
           onClick={onNextRound}
-          className="w-full py-3.5 px-6 rounded-xl font-bold text-base bg-gradient-to-r from-[#89b4fa] to-[#cba6f7] text-[#11111b] hover:shadow-[0_0_25px_rgba(137,180,250,0.5)] transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+          className="w-full py-3.5 px-6 rounded-2xl font-black text-sm sm:text-base bg-gradient-to-r from-[#89b4fa] to-[#cba6f7] text-[#11111b] hover:shadow-[0_0_25px_rgba(137,180,250,0.5)] transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
         >
-          <span>{t.nextRound} ({t.round} {currentRound + 1})</span>
+          <span>{t.nextRoundBtn} ({t.round} {currentRound + 1})</span>
           <ArrowRight className="w-5 h-5" />
         </button>
       </motion.div>

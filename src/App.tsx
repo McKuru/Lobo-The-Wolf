@@ -1,15 +1,25 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Card, GameMode, GameState, MoveLogItem, RoundResult } from './types';
+import { AnimatePresence, motion } from 'motion/react';
+import {
+  Card,
+  GameMode,
+  GameState,
+  MoveLogItem,
+  RoundResult,
+} from './types';
 import {
   dealNewRound,
   validateMove,
-  findPossibleMoves,
-  calculateCardsValue,
-  shuffleDeck,
   drawCards,
+  calculateCardsValue,
+  findPossibleMoves,
+  shuffleDeck,
 } from './utils/gameLogic';
 import { soundManager } from './utils/audio';
 import { Language, translations } from './utils/i18n';
+
+// Components
+import { MainMenu } from './components/MainMenu';
 import { HeaderBar } from './components/HeaderBar';
 import { WolfZone } from './components/WolfZone';
 import { PlayerZone } from './components/PlayerZone';
@@ -18,35 +28,28 @@ import { AftermathModal } from './components/AftermathModal';
 import { GameOverModal } from './components/GameOverModal';
 import { RulesModal } from './components/RulesModal';
 import { MoveLogDrawer } from './components/MoveLogDrawer';
-import { ResetConfirmModal } from './components/ResetConfirmModal';
-import { MainMenu } from './components/MainMenu';
 import { GameModeModal } from './components/GameModeModal';
 import { SettingsModal } from './components/SettingsModal';
-import { AnimatePresence, motion } from 'motion/react';
-import { Info, Shuffle } from 'lucide-react';
+import { ResetConfirmModal } from './components/ResetConfirmModal';
+import { Shuffle, Info, AlertTriangle } from 'lucide-react';
 
-export default function App() {
-  // Language State with localStorage persistence
+export function App() {
+  // Navigation / View State: Start in Main Menu
+  const [isInGame, setIsInGame] = useState(false);
+
+  // Active Language State (defaults to 'tr')
   const [lang, setLang] = useState<Language>(() => {
-    const saved = localStorage.getItem('lobo_lang');
-    return saved === 'en' || saved === 'tr' ? saved : 'tr';
+    const savedLang = localStorage.getItem('lobo_lang');
+    return savedLang === 'en' || savedLang === 'tr' ? savedLang : 'tr';
   });
 
   const t = translations[lang];
 
-  const handleLanguageChange = (newLang: Language) => {
-    setLang(newLang);
-    localStorage.setItem('lobo_lang', newLang);
-  };
-
-  // Screen View State: Main Menu or In-Game
-  const [isInGame, setIsInGame] = useState(false);
-
-  // Selected Game Mode State (defaults to classic or saved)
+  // Active Game Mode
   const [gameMode, setGameMode] = useState<GameMode>(() => {
     const saved = localStorage.getItem('lobo_gamemode');
-    return (saved === 'classic' || saved === 'lucky_5x' || saved === 'extra_cards')
-      ? (saved as GameMode)
+    return saved === 'lucky_5x' || saved === 'extra_cards' || saved === 'classic'
+      ? saved
       : 'classic';
   });
 
@@ -90,6 +93,7 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [shuffleNotification, setShuffleNotification] = useState<string | null>(null);
+  const [noMovesNotification, setNoMovesNotification] = useState<string | null>(null);
   const [moveCount, setMoveCount] = useState(0);
   const [hintedCardIds, setHintedCardIds] = useState<string[]>([]);
   const [hintMessage, setHintMessage] = useState<string | null>(null);
@@ -346,8 +350,8 @@ export default function App() {
     });
   };
 
-  // Surrender (Çekilme) Execution
-  const handleSurrender = useCallback(() => {
+  // Surrender (Çekilme) / Auto-fold Execution
+  const handleSurrender = useCallback((reason: 'player_surrender' | 'no_valid_moves' = 'player_surrender') => {
     setGameState((prev) => {
       if (prev.isRoundOver) return prev;
 
@@ -363,11 +367,25 @@ export default function App() {
         wolfRoundScore: roundScore,
         playerCardsRemaining: prev.playerHand,
         wolfCardsRemaining: prev.wolfHand,
-        reason: 'player_surrender',
+        reason,
         cardsTotalScore: roundScore,
       };
 
       const isWolfGameWon = nextWolfScore >= prev.targetScore;
+
+      // Add fold entry to move log
+      const foldLog: MoveLogItem = {
+        id: `fold-${Date.now()}`,
+        timestamp: Date.now(),
+        type: 'higher',
+        description: reason === 'no_valid_moves'
+          ? (translations[lang].descNoMovesFold(roundScore))
+          : (translations[lang].descFold(roundScore)),
+        playerCards: [],
+        wolfCards: prev.wolfHand,
+        cardsDrawn: 0,
+        drawer: 'wolf',
+      };
 
       return {
         ...prev,
@@ -378,10 +396,46 @@ export default function App() {
         gameWinner: isWolfGameWon ? 'wolf' : null,
         selectedPlayerCardIds: [],
         selectedWolfCardIds: [],
+        moveHistory: [foldLog, ...prev.moveHistory],
         stats: nextStats,
       };
     });
-  }, []);
+  }, [lang]);
+
+  // Automatic Fold when no valid moves exist
+  useEffect(() => {
+    if (!isInGame || gameState.isRoundOver || gameState.isGameOver) return;
+    if (gameState.playerHand.length === 0 || gameState.wolfHand.length === 0) return;
+
+    const possibleMoves = findPossibleMoves(
+      gameState.playerHand,
+      gameState.wolfHand,
+      gameState.deck.length,
+      lang
+    );
+
+    if (possibleMoves.length === 0) {
+      setNoMovesNotification(t.noMovesToast);
+      const timer = setTimeout(() => {
+        handleSurrender('no_valid_moves');
+        setNoMovesNotification(null);
+      }, 900);
+
+      return () => clearTimeout(timer);
+    } else {
+      setNoMovesNotification(null);
+    }
+  }, [
+    isInGame,
+    gameState.playerHand,
+    gameState.wolfHand,
+    gameState.deck.length,
+    gameState.isRoundOver,
+    gameState.isGameOver,
+    handleSurrender,
+    lang,
+    t.noMovesToast,
+  ]);
 
   // Advance to Next Round
   const handleNextRound = () => {
@@ -400,6 +454,7 @@ export default function App() {
     }));
     setHintedCardIds([]);
     setHintMessage(null);
+    setNoMovesNotification(null);
   };
 
   // Restart Entire Game
@@ -435,12 +490,19 @@ export default function App() {
     });
     setHintedCardIds([]);
     setHintMessage(null);
+    setNoMovesNotification(null);
   };
 
   // Sound Toggle
   const handleToggleSound = () => {
     const newMuted = soundManager.toggleMute();
     setIsMuted(newMuted);
+  };
+
+  // Language Change
+  const handleLanguageChange = (newLang: Language) => {
+    setLang(newLang);
+    localStorage.setItem('lobo_lang', newLang);
   };
 
   // Hint Solver Trigger
@@ -455,8 +517,8 @@ export default function App() {
     if (moves.length === 0) {
       setHintMessage(
         lang === 'tr'
-          ? 'Şu an direkt eşleşen veya toplanabilen bir hamle yok. Daha büyük bir kartla "Üst" hamlesi yapabilir veya çekilebilirsiniz.'
-          : 'No direct match or sum moves available right now. You can play a higher card (Over) or fold.'
+          ? 'Şu an oynanabilir hiçbir hamle kalmadı. Otomatik olarak çekiliniyor...'
+          : 'No moves left to play right now. Automatically folding...'
       );
       setHintedCardIds([]);
       soundManager.playInvalid();
@@ -533,6 +595,21 @@ export default function App() {
             )}
           </AnimatePresence>
 
+          {/* No Moves Left Auto-Fold Notification Toast */}
+          <AnimatePresence>
+            {noMovesNotification && (
+              <motion.div
+                initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                className="absolute top-16 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 bg-[#fab387] text-[#11111b] rounded-full font-extrabold text-xs shadow-2xl flex items-center gap-2 border border-white/20"
+              >
+                <AlertTriangle className="w-4 h-4 animate-pulse text-[#11111b]" />
+                <span>{noMovesNotification}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Hint Alert Notification Bar */}
           <AnimatePresence>
             {hintMessage && (
@@ -576,7 +653,7 @@ export default function App() {
                   hasSelection={hasSelection}
                   validation={validation}
                   onPlayMove={handlePlayMove}
-                  onSurrender={handleSurrender}
+                  onSurrender={() => handleSurrender('player_surrender')}
                   disabled={gameState.isRoundOver}
                   lang={lang}
                 />
@@ -675,3 +752,5 @@ export default function App() {
     </div>
   );
 }
+
+export default App;
