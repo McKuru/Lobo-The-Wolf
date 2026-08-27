@@ -100,17 +100,17 @@ export const MainMenu: React.FC<MainMenuProps> = ({
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-10 sm:mb-14"
+          className="text-center mb-6 sm:mb-10 md:mb-14"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-[#1e1e2e] border-2 border-[#89b4fa]/40 shadow-[0_0_40px_rgba(137,180,250,0.25)] mb-4 text-3xl sm:text-4xl">
+          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-2xl sm:rounded-3xl bg-[#1e1e2e] border-2 border-[#89b4fa]/40 shadow-[0_0_40px_rgba(137,180,250,0.25)] mb-3 sm:mb-4 text-2xl sm:text-3xl md:text-4xl">
             🐺
           </div>
 
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-[#cdd6f4] to-[#89b4fa] tracking-tight uppercase">
+          <h1 className="text-3xl xs:text-4xl sm:text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-[#cdd6f4] to-[#89b4fa] tracking-tight uppercase">
             Lobo The Wolf
           </h1>
 
-          <p className="text-xs sm:text-sm md:text-base text-[#a6adc8] font-medium mt-2 max-w-md mx-auto">
+          <p className="text-xs sm:text-sm md:text-base text-[#a6adc8] font-medium mt-1.5 sm:mt-2 max-w-md mx-auto px-2">
             {t.menuSubtitle}
           </p>
         </motion.div>
@@ -120,10 +120,10 @@ export const MainMenu: React.FC<MainMenuProps> = ({
           initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.15 }}
-          className="flex items-center justify-center gap-4 sm:gap-6 md:gap-8 flex-wrap"
+          className="grid grid-cols-2 sm:flex sm:flex-nowrap items-center justify-center gap-3.5 xs:gap-4 sm:gap-6 md:gap-8"
         >
           {/* Button 1 (Left): Green PLAY Button */}
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-1.5 sm:gap-2">
             <motion.button
               id="menu-play-button"
               whileHover={{ scale: 1.08, y: -4 }}
@@ -132,18 +132,18 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                 soundManager.playMoveSuccess('match');
                 onStartGame();
               }}
-              className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-[#a6e3a1] text-[#11111b] border-4 border-[#181825] shadow-[0_0_35px_rgba(166,227,161,0.5)] flex items-center justify-center cursor-pointer transition-shadow hover:shadow-[0_0_45px_rgba(166,227,161,0.7)] group"
+              className="w-16 h-16 xs:w-18 xs:h-18 sm:w-22 sm:h-22 md:w-28 md:h-28 rounded-full bg-[#a6e3a1] text-[#11111b] border-3 sm:border-4 border-[#181825] shadow-[0_0_35px_rgba(166,227,161,0.5)] flex items-center justify-center cursor-pointer transition-shadow hover:shadow-[0_0_45px_rgba(166,227,161,0.7)] group"
               title={t.playBtn}
             >
-              <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-current ml-1 transition-transform group-hover:scale-110" />
+              <Play className="w-6 h-6 xs:w-7 xs:h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 fill-current ml-0.5 sm:ml-1 transition-transform group-hover:scale-110" />
             </motion.button>
-            <span className="text-xs sm:text-sm font-black text-[#a6e3a1] tracking-wide uppercase">
+            <span className="text-[11px] sm:text-sm font-black text-[#a6e3a1] tracking-wide uppercase">
               {t.playBtn}
             </span>
           </div>
 
           {/* Button 2 (Middle-Left): Yellow GAME MODE Selector Button */}
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-1.5 sm:gap-2">
             <motion.button
               id="menu-modes-button"
               whileHover={{ scale: 1.08, y: -4 }}
@@ -152,18 +152,18 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                 soundManager.playCardSelect();
                 onOpenGameModes();
               }}
-              className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-[#f9e2af] text-[#11111b] border-4 border-[#181825] shadow-[0_0_35px_rgba(249,226,175,0.45)] flex items-center justify-center cursor-pointer transition-shadow hover:shadow-[0_0_45px_rgba(249,226,175,0.65)] group"
+              className="w-16 h-16 xs:w-18 xs:h-18 sm:w-22 sm:h-22 md:w-28 md:h-28 rounded-full bg-[#f9e2af] text-[#11111b] border-3 sm:border-4 border-[#181825] shadow-[0_0_35px_rgba(249,226,175,0.45)] flex items-center justify-center cursor-pointer transition-shadow hover:shadow-[0_0_45px_rgba(249,226,175,0.65)] group"
               title={t.gameModeBtn}
             >
-              <Flame className="w-8 h-8 sm:w-9 sm:h-9 fill-current transition-transform group-hover:scale-110" />
+              <Flame className="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 fill-current transition-transform group-hover:scale-110" />
             </motion.button>
-            <span className="text-xs sm:text-sm font-black text-[#f9e2af] tracking-wide uppercase">
+            <span className="text-[11px] sm:text-sm font-black text-[#f9e2af] tracking-wide uppercase">
               {t.gameModeBtn}
             </span>
           </div>
 
           {/* Button 3 (Middle-Right): Dark/Muted Blue SETTINGS Button */}
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-1.5 sm:gap-2">
             <motion.button
               id="menu-settings-button"
               whileHover={{ scale: 1.08, y: -4 }}
@@ -172,18 +172,18 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                 soundManager.playCardSelect();
                 onOpenSettings();
               }}
-              className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-[#45475a] hover:bg-[#585b70] text-[#89b4fa] border-4 border-[#181825] shadow-[0_0_30px_rgba(137,180,250,0.3)] flex items-center justify-center cursor-pointer transition-all hover:shadow-[0_0_40px_rgba(137,180,250,0.5)] group"
+              className="w-16 h-16 xs:w-18 xs:h-18 sm:w-22 sm:h-22 md:w-28 md:h-28 rounded-full bg-[#45475a] hover:bg-[#585b70] text-[#89b4fa] border-3 sm:border-4 border-[#181825] shadow-[0_0_30px_rgba(137,180,250,0.3)] flex items-center justify-center cursor-pointer transition-all hover:shadow-[0_0_40px_rgba(137,180,250,0.5)] group"
               title={t.settingsBtn}
             >
-              <Sliders className="w-7 h-7 sm:w-8 sm:h-8 transition-transform group-hover:scale-110 text-[#89b4fa]" />
+              <Sliders className="w-6 h-6 xs:w-6 xs:h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 transition-transform group-hover:scale-110 text-[#89b4fa]" />
             </motion.button>
-            <span className="text-xs sm:text-sm font-black text-[#89b4fa] tracking-wide uppercase">
+            <span className="text-[11px] sm:text-sm font-black text-[#89b4fa] tracking-wide uppercase">
               {t.settingsBtn}
             </span>
           </div>
 
           {/* Button 4 (Right): Purple RULES Button */}
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-1.5 sm:gap-2">
             <motion.button
               id="menu-rules-button"
               whileHover={{ scale: 1.08, y: -4 }}
@@ -192,12 +192,12 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                 soundManager.playCardSelect();
                 onOpenRules();
               }}
-              className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-[#313244] hover:bg-[#45475a] text-[#cba6f7] border-4 border-[#181825] shadow-[0_0_25px_rgba(203,166,247,0.25)] flex items-center justify-center cursor-pointer transition-all hover:shadow-[0_0_35px_rgba(203,166,247,0.45)] group"
+              className="w-16 h-16 xs:w-18 xs:h-18 sm:w-22 sm:h-22 md:w-28 md:h-28 rounded-full bg-[#313244] hover:bg-[#45475a] text-[#cba6f7] border-3 sm:border-4 border-[#181825] shadow-[0_0_25px_rgba(203,166,247,0.25)] flex items-center justify-center cursor-pointer transition-all hover:shadow-[0_0_35px_rgba(203,166,247,0.45)] group"
               title={t.rulesBtn}
             >
-              <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 transition-transform group-hover:scale-110 text-[#cba6f7]" />
+              <BookOpen className="w-6 h-6 xs:w-6 xs:h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 transition-transform group-hover:scale-110 text-[#cba6f7]" />
             </motion.button>
-            <span className="text-xs sm:text-sm font-black text-[#cba6f7] tracking-wide uppercase">
+            <span className="text-[11px] sm:text-sm font-black text-[#cba6f7] tracking-wide uppercase">
               {t.rulesBtn}
             </span>
           </div>

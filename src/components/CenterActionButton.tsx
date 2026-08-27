@@ -140,29 +140,29 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
               id="center-play-button"
               onClick={handlePointerDown}
               disabled={disabled}
-              className={`relative w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-4 sm:border-[6px] border-[#1e1e2e] flex flex-col items-center justify-center group cursor-pointer transition-transform hover:scale-105 active:scale-95 select-none overflow-hidden
+              className={`relative w-16 h-16 xs:w-18 xs:h-18 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-3 sm:border-[6px] border-[#1e1e2e] flex flex-col items-center justify-center group cursor-pointer transition-transform hover:scale-105 active:scale-95 select-none overflow-hidden
                 ${
                   validation.isValid
                     ? 'bg-[#74c7ec] text-[#11111b] shadow-[0_0_35px_rgba(116,199,236,0.5)]'
-                    : 'bg-[#313244] text-[#f38ba8] border-4 sm:border-[6px] border-[#1e1e2e] shadow-[0_0_20px_rgba(243,139,168,0.3)]'
+                    : 'bg-[#313244] text-[#f38ba8] border-3 sm:border-[6px] border-[#1e1e2e] shadow-[0_0_20px_rgba(243,139,168,0.3)]'
                 }
               `}
             >
               {validation.isValid ? (
                 <>
-                  <span className="text-[#11111b] font-black text-sm sm:text-xl md:text-2xl tracking-tighter uppercase leading-none">
+                  <span className="text-[#11111b] font-black text-xs xs:text-sm sm:text-xl md:text-2xl tracking-tighter uppercase leading-none">
                     {t.play}
                   </span>
-                  <span className="text-[#11111b] text-[8px] sm:text-[10px] md:text-[11px] font-bold opacity-85 mt-0.5 uppercase text-center px-1 whitespace-nowrap">
+                  <span className="text-[#11111b] text-[7px] xs:text-[8px] sm:text-[10px] md:text-[11px] font-bold opacity-85 mt-0.5 uppercase text-center px-0.5 whitespace-nowrap">
                     {validation.title || (lang === 'tr' ? 'Hamle' : 'Move')}
                   </span>
                 </>
               ) : (
                 <>
-                  <span className="text-[#f38ba8] font-black text-xs sm:text-sm md:text-base tracking-tight uppercase leading-none">
+                  <span className="text-[#f38ba8] font-black text-[10px] xs:text-xs sm:text-sm md:text-base tracking-tight uppercase leading-none">
                     {t.invalid}
                   </span>
-                  <span className="text-[#a6adc8] text-[7px] sm:text-[9px] font-semibold mt-0.5 text-center px-1 whitespace-nowrap">
+                  <span className="text-[#a6adc8] text-[6.5px] xs:text-[7px] sm:text-[9px] font-semibold mt-0.5 text-center px-0.5 whitespace-nowrap">
                     {validation.errorReason || (lang === 'tr' ? 'Hata' : 'Error')}
                   </span>
                 </>
@@ -179,7 +179,7 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
               onPointerLeave={handlePointerCancel}
               onContextMenu={(e) => e.preventDefault()}
               disabled={disabled}
-              className={`relative w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-4 sm:border-[6px] border-[#1e1e2e] flex flex-col items-center justify-center group cursor-pointer transition-transform hover:scale-105 active:scale-95 select-none overflow-hidden shadow-[0_0_25px_rgba(0,0,0,0.4)]
+              className={`relative w-16 h-16 xs:w-18 xs:h-18 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-3 sm:border-[6px] border-[#1e1e2e] flex flex-col items-center justify-center group cursor-pointer transition-transform hover:scale-105 active:scale-95 select-none overflow-hidden shadow-[0_0_25px_rgba(0,0,0,0.4)]
                 ${
                   isCharged
                     ? 'bg-[#f38ba8] text-[#11111b] shadow-[0_0_30px_rgba(243,139,168,0.7)] animate-pulse'
@@ -198,7 +198,7 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
               )}
 
               <span
-                className={`font-black text-sm sm:text-xl md:text-2xl tracking-tighter uppercase leading-none z-10
+                className={`font-black text-xs xs:text-sm sm:text-xl md:text-2xl tracking-tighter uppercase leading-none z-10
                   ${
                     isCharged
                       ? 'text-[#11111b]'
@@ -215,7 +215,7 @@ export const CenterActionButton: React.FC<CenterActionButtonProps> = ({
                   : 'LOBO'}
               </span>
               <span
-                className={`text-[8px] sm:text-[10px] md:text-[11px] font-bold mt-1 uppercase text-center px-1 z-10 tracking-wide
+                className={`text-[7px] xs:text-[8px] sm:text-[10px] md:text-[11px] font-bold mt-0.5 sm:mt-1 uppercase text-center px-0.5 z-10 tracking-wide
                   ${isCharged ? 'text-[#11111b]' : isPressing ? 'text-[#f38ba8]' : 'text-[#89b4fa] opacity-90'}
                 `}
               >

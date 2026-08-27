@@ -364,7 +364,7 @@ class SoundEngine {
   }
 
   /**
-   * Card draw sound: swish / flip
+   * Card draw sound: natural smooth card glide & soft flick
    */
   public playCardDraw() {
     const ctx = this.getContext();
@@ -373,23 +373,29 @@ class SoundEngine {
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1200, now);
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(300, now);
-    osc.frequency.exponentialRampToValueAtTime(700, now + 0.1);
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(680, now + 0.09);
 
-    gain.gain.setValueAtTime(0.1, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.12, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
 
-    osc.connect(gain);
+    osc.connect(filter);
+    filter.connect(gain);
     gain.connect(this.sfxGainNode);
 
     osc.start(now);
-    osc.stop(now + 0.1);
+    osc.stop(now + 0.11);
   }
 
   /**
-   * Wolf card draw sound (growly/deep)
+   * Wolf card draw sound: deep warm acoustic cello pluck (no harsh buzz)
    */
   public playWolfDraw() {
     const ctx = this.getContext();
@@ -397,24 +403,39 @@ class SoundEngine {
 
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
+    const oscHarmonic = ctx.createOscillator();
     const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
 
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(140, now);
-    osc.frequency.exponentialRampToValueAtTime(90, now + 0.18);
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(450, now);
+    filter.Q.setValueAtTime(1.5, now);
 
-    gain.gain.setValueAtTime(0.12, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    // Warm deep cello fundamental
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(130.81, now); // C3
+    osc.frequency.exponentialRampToValueAtTime(98.0, now + 0.22); // G2
 
-    osc.connect(gain);
+    oscHarmonic.type = 'triangle';
+    oscHarmonic.frequency.setValueAtTime(261.63, now); // C4
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.14, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+    osc.connect(filter);
+    oscHarmonic.connect(filter);
+    filter.connect(gain);
     gain.connect(this.sfxGainNode);
 
     osc.start(now);
-    osc.stop(now + 0.18);
+    oscHarmonic.start(now);
+    osc.stop(now + 0.22);
+    oscHarmonic.stop(now + 0.22);
   }
 
   /**
-   * Long press tick (charging up surrender)
+   * Long press tick (charging up surrender): gentle acoustic singing bowl resonance
    */
   public playChargeTick(progress: number) {
     const ctx = this.getContext();
@@ -423,44 +444,66 @@ class SoundEngine {
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1400, now);
 
     osc.type = 'sine';
-    const freq = 200 + progress * 400;
+    const freq = 260 + progress * 320;
     osc.frequency.setValueAtTime(freq, now);
 
-    gain.gain.setValueAtTime(0.05, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.06 + progress * 0.04, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
 
-    osc.connect(gain);
+    osc.connect(filter);
+    filter.connect(gain);
     gain.connect(this.sfxGainNode);
 
     osc.start(now);
-    osc.stop(now + 0.03);
+    osc.stop(now + 0.05);
   }
 
   /**
-   * Error / Invalid move sound
+   * Invalid / Error move sound: soft natural double marimba knock (replaces 8-bit sawtooth)
    */
   public playInvalid() {
     const ctx = this.getContext();
     if (!ctx || !this.sfxGainNode) return;
 
     const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    const freqs = [185.0, 146.83]; // F#3, D3 warm low knock
 
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(180, now);
-    osc.frequency.setValueAtTime(140, now + 0.08);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(420, now);
+    filter.connect(this.sfxGainNode);
 
-    gain.gain.setValueAtTime(0.14, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+    freqs.forEach((freq, idx) => {
+      const startTime = now + idx * 0.08;
+      const osc = ctx.createOscillator();
+      const oscTriangle = ctx.createOscillator();
+      const gain = ctx.createGain();
 
-    osc.connect(gain);
-    gain.connect(this.sfxGainNode);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      oscTriangle.type = 'triangle';
+      oscTriangle.frequency.setValueAtTime(freq * 1.5, startTime);
 
-    osc.start(now);
-    osc.stop(now + 0.16);
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.linearRampToValueAtTime(0.15, startTime + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.16);
+
+      osc.connect(gain);
+      oscTriangle.connect(gain);
+      gain.connect(filter);
+
+      osc.start(startTime);
+      oscTriangle.start(startTime);
+      osc.stop(startTime + 0.16);
+      oscTriangle.stop(startTime + 0.16);
+    });
   }
 
   /**
@@ -536,31 +579,69 @@ class SoundEngine {
   }
 
   /**
-   * Card shuffle sound: rapid cascading card sweeps
+   * Card shuffle sound: rapid cascading acoustic card sweeps
    */
   public playShuffle() {
     const ctx = this.getContext();
     if (!ctx || !this.sfxGainNode) return;
 
     const now = ctx.currentTime;
-    for (let i = 0; i < 7; i++) {
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(950, now);
+    filter.Q.setValueAtTime(1.0, now);
+    filter.connect(this.sfxGainNode);
+
+    for (let i = 0; i < 6; i++) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      const start = now + i * 0.035;
+      const start = now + i * 0.04;
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(350 + i * 70, start);
-      osc.frequency.exponentialRampToValueAtTime(750 + i * 40, start + 0.05);
+      osc.frequency.setValueAtTime(320 + i * 55, start);
+      osc.frequency.exponentialRampToValueAtTime(620 + i * 30, start + 0.05);
 
-      gain.gain.setValueAtTime(0.08, start);
+      gain.gain.setValueAtTime(0.001, start);
+      gain.gain.linearRampToValueAtTime(0.09, start + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.001, start + 0.05);
 
       osc.connect(gain);
-      gain.connect(this.sfxGainNode);
+      gain.connect(filter);
 
       osc.start(start);
       osc.stop(start + 0.05);
     }
+  }
+
+  /**
+   * Clean acoustic button click / tap
+   */
+  public playButtonClick() {
+    const ctx = this.getContext();
+    if (!ctx || !this.sfxGainNode) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1200, now);
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(480, now);
+    osc.frequency.exponentialRampToValueAtTime(720, now + 0.04);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.09, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.sfxGainNode);
+
+    osc.start(now);
+    osc.stop(now + 0.045);
   }
 
   /**
@@ -573,14 +654,20 @@ class SoundEngine {
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1600, now);
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(640 + Math.random() * 60, now);
+    osc.frequency.setValueAtTime(620 + Math.random() * 40, now);
 
-    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.08, now + 0.005);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
 
-    osc.connect(gain);
+    osc.connect(filter);
+    filter.connect(gain);
     gain.connect(this.sfxGainNode);
 
     osc.start(now);

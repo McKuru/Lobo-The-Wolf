@@ -87,6 +87,15 @@ export function dealNewRound(gameMode: GameMode = 'classic'): {
         playerHand.push(deck.splice(targetIndex, 1)[0]);
       }
     }
+
+    // Also place a favorable card at deck[0] so the initial face-up card is visible and lucky
+    if (deck.length > 1) {
+      const luckyIndex = deck.findIndex((c) => wolfValues.includes(c.value) || c.value >= 7);
+      if (luckyIndex > 0) {
+        const [luckyCard] = deck.splice(luckyIndex, 1);
+        deck.unshift(luckyCard);
+      }
+    }
   } else {
     playerHand = deck.splice(0, playerCount);
   }
@@ -99,7 +108,10 @@ export function dealNewRound(gameMode: GameMode = 'classic'): {
 }
 
 /**
- * Draw cards from deck, with lucky advantage if in 5x Luck Mode and drawn for player
+ * Draw cards from deck.
+ * CRITICAL RULE: Always draws sequentially from deck[0] (currentDeck.shift()).
+ * Whatever card the player sees on top of the deck (Açık Kart / Face Up) MUST be the exact card drawn!
+ * In 5x Luck mode, favorable cards are positioned at deck[0] for subsequent turns in advance so the player sees them before drawing.
  */
 export function drawCards(
   deck: Card[],
@@ -112,14 +124,19 @@ export function drawCards(
   const drawnCards: Card[] = [];
 
   for (let i = 0; i < count && currentDeck.length > 0; i++) {
-    if (drawnBy === 'player' && gameMode === 'lucky_5x' && Math.random() < 0.8) {
-      // 80% chance of pulling a card matching wolf values or a high card
-      const wolfValues = wolfHand.map((c) => c.value);
-      let targetIndex = currentDeck.findIndex((c) => wolfValues.includes(c.value) || c.value >= 8);
-      if (targetIndex === -1) targetIndex = 0;
-      drawnCards.push(currentDeck.splice(targetIndex, 1)[0]);
-    } else {
-      drawnCards.push(currentDeck.shift()!);
+    // ALWAYS draw from the very top of the deck (index 0)
+    // This ensures 100% visual consistency: what you see is what you get!
+    drawnCards.push(currentDeck.shift()!);
+  }
+
+  // If in lucky_5x mode, prepare the next top card of the deck (deck[0]) to be favorable
+  // for the player's upcoming move, so they see it beforehand.
+  if (gameMode === 'lucky_5x' && currentDeck.length > 1 && Math.random() < 0.75) {
+    const wolfValues = wolfHand.map((c) => c.value);
+    const luckyIndex = currentDeck.findIndex((c) => wolfValues.includes(c.value) || c.value >= 7);
+    if (luckyIndex > 0) {
+      const [luckyCard] = currentDeck.splice(luckyIndex, 1);
+      currentDeck.unshift(luckyCard);
     }
   }
 

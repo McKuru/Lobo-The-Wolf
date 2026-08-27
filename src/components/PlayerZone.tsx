@@ -62,15 +62,15 @@ export const PlayerZone: React.FC<PlayerZoneProps> = ({
       </div>
 
       {/* Player Hand & Draw Deck Area */}
-      <div className="my-auto py-1 sm:py-2 flex items-center justify-center gap-2 sm:gap-6 md:gap-8 z-10 w-full max-w-5xl mx-auto">
-        {/* Player Active Face-Up Cards - 2 rows in mobile grid, single row in tablet/desktop */}
-        <div className="grid grid-cols-2 sm:flex sm:flex-nowrap items-center justify-items-center justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-5 min-h-[100px] sm:min-h-[140px] px-0.5 sm:px-1">
+      <div className="my-auto py-1 sm:py-2 flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-6 md:gap-8 z-10 w-full max-w-5xl mx-auto">
+        {/* Player Active Face-Up Cards - Smooth responsive flex container */}
+        <div className="flex flex-wrap sm:flex-nowrap items-center justify-center gap-1.5 xs:gap-2 sm:gap-3 md:gap-4 lg:gap-5 min-h-[82px] xs:min-h-[92px] sm:min-h-[140px] px-0.5 sm:px-1 max-w-full">
           <AnimatePresence mode="popLayout">
             {playerCards.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="col-span-2 px-6 py-4 rounded-xl border border-dashed border-[#585b70]/40 bg-[#181825] text-center"
+                className="px-4 py-3 sm:px-6 sm:py-4 rounded-xl border border-dashed border-[#585b70]/40 bg-[#181825] text-center"
               >
                 <p className="text-sm font-semibold text-[#a6adc8]">
                   {lang === 'tr' ? 'Elinizde kart kalmadı' : 'No cards left in hand'}
@@ -93,17 +93,17 @@ export const PlayerZone: React.FC<PlayerZoneProps> = ({
         </div>
 
         {/* Right side: Draw Deck with High-Elevation 3D Stack */}
-        <div className="flex-shrink-0 flex flex-col items-center justify-center pl-2 sm:pl-4 border-l border-[#313244]/40">
+        <div className="flex-shrink-0 flex flex-col items-center justify-center pl-1.5 xs:pl-2 sm:pl-4 border-l border-[#313244]/40">
           <div className="relative group flex flex-col items-center">
             {deck.length > 0 ? (
               <>
                 {/* 3D Stacked Card Pile with Depth & Elevation */}
-                <div className="absolute top-2.5 -right-2 w-16 h-22 sm:w-20 sm:h-28 md:w-24 md:h-34 lg:w-28 lg:h-40 rounded-xl bg-[#11111b] border border-[#313244] pointer-events-none transform rotate-4 shadow-xl" />
-                <div className="absolute top-1 -right-1 w-16 h-22 sm:w-20 sm:h-28 md:w-24 md:h-34 lg:w-28 lg:h-40 rounded-xl bg-[#181825] border border-[#45475a] pointer-events-none transform rotate-2 shadow-lg" />
+                <div className="absolute top-2 -right-1.5 w-[52px] h-[76px] xs:w-[60px] xs:h-[86px] sm:w-20 sm:h-28 md:w-24 md:h-34 lg:w-28 lg:h-40 rounded-xl bg-[#11111b] border border-[#313244] pointer-events-none transform rotate-4 shadow-xl" />
+                <div className="absolute top-1 -right-0.5 w-[52px] h-[76px] xs:w-[60px] xs:h-[86px] sm:w-20 sm:h-28 md:w-24 md:h-34 lg:w-28 lg:h-40 rounded-xl bg-[#181825] border border-[#45475a] pointer-events-none transform rotate-2 shadow-lg" />
 
                 {/* Top Card Face Up with Açık Kart Badge & Elevation */}
                 <div className="relative z-10 shadow-[0_12px_32px_rgba(0,0,0,0.65)] rounded-xl">
-                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-[#a6e3a1] text-[#11111b] text-[8px] sm:text-[10px] font-black px-1.5 py-0.5 rounded uppercase z-20 shadow-md whitespace-nowrap">
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-[#a6e3a1] text-[#11111b] text-[7px] xs:text-[8px] sm:text-[10px] font-black px-1 sm:px-1.5 py-0.5 rounded uppercase z-20 shadow-md whitespace-nowrap">
                     {lang === 'tr' ? 'Açık Kart' : 'Face Up'}
                   </div>
                   <CardView
@@ -114,22 +114,22 @@ export const PlayerZone: React.FC<PlayerZoneProps> = ({
                 </div>
 
                 {/* Deck remaining count badge */}
-                <div className="mt-1 sm:mt-2 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#181825] border border-[#45475a] text-[9px] sm:text-[10px] text-[#cdd6f4] font-medium shadow-md">
+                <div className="mt-1 sm:mt-2 flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 rounded-full bg-[#181825] border border-[#45475a] text-[8px] xs:text-[9px] sm:text-[10px] text-[#cdd6f4] font-medium shadow-md">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#a6e3a1]" />
                   <span>
                     {lang === 'tr'
-                      ? `Deste: ${deck.length} kart`
-                      : `Deck: ${deck.length} cards`}
+                      ? `Deste: ${deck.length}`
+                      : `Deck: ${deck.length}`}
                   </span>
                 </div>
               </>
             ) : (
-              <div className="w-16 h-22 sm:w-20 sm:h-28 md:w-24 md:h-34 lg:w-28 lg:h-40 rounded-xl border-2 border-dashed border-[#45475a] bg-[#181825]/40 flex flex-col items-center justify-center p-2 text-center">
-                <span className="text-lg sm:text-xl mb-1 opacity-50">📭</span>
-                <span className="text-[9px] sm:text-[10px] font-bold text-[#a6adc8]">
+              <div className="w-[52px] h-[76px] xs:w-[60px] xs:h-[86px] sm:w-20 sm:h-28 md:w-24 md:h-34 lg:w-28 lg:h-40 rounded-xl border-2 border-dashed border-[#45475a] bg-[#181825]/40 flex flex-col items-center justify-center p-1 sm:p-2 text-center">
+                <span className="text-base sm:text-xl mb-0.5 opacity-50">📭</span>
+                <span className="text-[8px] sm:text-[10px] font-bold text-[#a6adc8]">
                   {t.deckExhaustedTitle}
                 </span>
-                <span className="text-[8px] sm:text-[9px] text-[#6c7086]">0 {t.cardCount}</span>
+                <span className="text-[7px] sm:text-[9px] text-[#6c7086]">0 {t.cardCount}</span>
               </div>
             )}
           </div>
